@@ -165,9 +165,8 @@ command_storage = {
     },
     "connected_bots": [],
     "last_bot_ping": None
-}
-
-# ==================== CO
+    
+    
 class CommandManager:
     def __init__(self):
         self.storage = command_storage
@@ -209,7 +208,7 @@ class CommandManager:
             print(f"❌ Save error: {e}")
             return None
 
-command_manager = CommandManager()MMAND MANAGER ====================
+command_manager = CommandManager()
 
 
 # ==================== HTML TEMPLATE - NEW COLOR SCHEME ====================
