@@ -843,8 +843,7 @@ HTML_TEMPLATE = '''
                     <div class="input-wrapper">
                         <i class="fas fa-hashtag form-icon"></i>
                         <input type="text" class="form-control" id="teamCode" 
-                               placeholder="Enter 7-digit team code" pattern="\d{7}" maxlength="7" required
-                               value="1234567">
+                               placeholder="Enter 7-digit team code" pattern="\d{7}" maxlength="7" required>
                     </div>
                 </div>
                 
@@ -853,8 +852,7 @@ HTML_TEMPLATE = '''
                     <div class="input-wrapper">
                         <i class="fas fa-crosshairs form-icon"></i>
                         <input type="text" class="form-control" id="targetUid" 
-                               placeholder="Enter target UID (8-11 digits)" pattern="\d{8,11}" required
-                               value="13706108657">
+                               placeholder="Enter target UID (8-11 digits)" pattern="\d{8,11}" required>
                     </div>
                 </div>
                 
@@ -863,8 +861,7 @@ HTML_TEMPLATE = '''
                     <div class="input-wrapper">
                         <i class="fas fa-magic form-icon"></i>
                         <input type="text" class="form-control" id="emoteId" 
-                               placeholder="909033001" pattern="\d{9}" required
-                               value="909033001">
+                               placeholder="909033001" pattern="\d{9}" required>
                     </div>
                 </div>
             </div>
@@ -908,10 +905,10 @@ HTML_TEMPLATE = '''
                         </div>
                         <div class="emote-action">
                             <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i>
+                                <i class="fas fa-mouse-pointer"></i> SELECT
                             </button>
                             <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane"></i> SEND
                             </button>
                         </div>
                     </div>
@@ -933,10 +930,10 @@ HTML_TEMPLATE = '''
                         </div>
                         <div class="emote-action">
                             <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i>
+                                <i class="fas fa-mouse-pointer"></i> SELECT
                             </button>
                             <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane"></i> SEND
                             </button>
                         </div>
                     </div>
@@ -958,10 +955,10 @@ HTML_TEMPLATE = '''
                         </div>
                         <div class="emote-action">
                             <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i>
+                                <i class="fas fa-mouse-pointer"></i> SELECT
                             </button>
                             <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane"></i> SEND
                             </button>
                         </div>
                     </div>
@@ -983,10 +980,10 @@ HTML_TEMPLATE = '''
                         </div>
                         <div class="emote-action">
                             <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i>
+                                <i class="fas fa-mouse-pointer"></i> SELECT
                             </button>
                             <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i>
+                                <i class="fas fa-paper-plane"></i> SEND
                             </button>
                         </div>
                     </div>
@@ -1077,7 +1074,36 @@ HTML_TEMPLATE = '''
             setInterval(checkBotStatus, 5000);
             setInterval(loadCommandsHistory, 3000);
             setInterval(updateStats, 10000);
+            
+            // Load saved data from localStorage
+            loadSavedData();
         });
+        
+        // ================= SAVE AND LOAD USER DATA =================
+        function saveUserData() {
+            const teamCode = document.getElementById('teamCode').value;
+            const targetUid = document.getElementById('targetUid').value;
+            
+            localStorage.setItem('teamCode', teamCode);
+            localStorage.setItem('targetUid', targetUid);
+        }
+        
+        function loadSavedData() {
+            const savedTeamCode = localStorage.getItem('teamCode');
+            const savedTargetUid = localStorage.getItem('targetUid');
+            
+            if (savedTeamCode) {
+                document.getElementById('teamCode').value = savedTeamCode;
+            }
+            
+            if (savedTargetUid) {
+                document.getElementById('targetUid').value = savedTargetUid;
+            }
+            
+            // Auto-save when user types
+            document.getElementById('teamCode').addEventListener('input', saveUserData);
+            document.getElementById('targetUid').addEventListener('input', saveUserData);
+        }
         
         // ================= TAB SYSTEM =================
         function openTab(tabName) {
@@ -1099,8 +1125,14 @@ HTML_TEMPLATE = '''
         // ================= EMOTE FUNCTIONS =================
         function useEmote(emoteId, emoteName) {
             document.getElementById('emoteId').value = emoteId;
-            showNotification(`✅ ${emoteName} selected! Enter Team Code & Target UID`);
-            document.getElementById('teamCode').focus();
+            showNotification(`✅ ${emoteName} selected!`, 'success');
+            
+            // Focus on Team Code if empty
+            if (!document.getElementById('teamCode').value) {
+                document.getElementById('teamCode').focus();
+            } else if (!document.getElementById('targetUid').value) {
+                document.getElementById('targetUid').focus();
+            }
         }
         
         function sendEmote(emoteId, emoteName, event) {
@@ -1150,6 +1182,9 @@ HTML_TEMPLATE = '''
                 return;
             }
             
+            // Save user data
+            saveUserData();
+            
             // Show sending animation
             const sendBtn = document.querySelector('.btn-primary');
             const originalText = sendBtn.innerHTML;
@@ -1174,13 +1209,15 @@ HTML_TEMPLATE = '''
                 if (data.success) {
                     commandCount++;
                     updateStats();
-                    showNotification(`🚀 ${emoteName} sent to UID ${target}!`);
+                    showNotification(`🚀 ${emoteName} sent to UID ${target}!`, 'success');
                     loadCommandsHistory();
                     
-                    // Reset form
-                    document.getElementById('teamCode').value = '1234567';
-                    document.getElementById('targetUid').value = '13706108657';
+                    // Emote ID रहेगा, user को फिर से डालने की जरूरत नहीं
                     document.getElementById('emoteId').value = emote;
+                    
+                    // Optional: Auto-clear after successful send (comment out if not wanted)
+                    // document.getElementById('teamCode').value = '';
+                    // document.getElementById('targetUid').value = '';
                 } else {
                     showNotification(`❌ Error: ${data.error}`, 'error');
                 }
@@ -1278,6 +1315,14 @@ HTML_TEMPLATE = '''
         
         function updateStats() {
             document.getElementById('totalCommands').textContent = commandCount;
+            
+            // Update response time
+            const start = Date.now();
+            fetch('/status', { method: 'HEAD' })
+                .then(() => {
+                    const time = Date.now() - start;
+                    document.getElementById('responseTime').textContent = `${time}ms`;
+                });
         }
         
         // ================= NOTIFICATION =================
@@ -1301,6 +1346,16 @@ HTML_TEMPLATE = '''
             setTimeout(() => {
                 notif.style.display = 'none';
             }, 4000);
+        }
+        
+        // ================= CLEAR FORM BUTTON (Optional) =================
+        function clearForm() {
+            localStorage.removeItem('teamCode');
+            localStorage.removeItem('targetUid');
+            document.getElementById('teamCode').value = '';
+            document.getElementById('targetUid').value = '';
+            document.getElementById('emoteId').value = '';
+            showNotification('✅ Form cleared!', 'success');
         }
     </script>
 </body>
