@@ -158,14 +158,11 @@ command_storage = {
         "today": 0,
         "evo": 0,
         "special": 0,
-        "popular": 0,
-        "dance": 0,
-        "legendary": 0,
-        "new_2024": 0
-    },
-    "connected_bots": [],
-    "last_bot_ping": None
-    
+        "basic": 0,
+        "legendary": 0
+    }
+}
+
     
 class CommandManager:
     def __init__(self):
