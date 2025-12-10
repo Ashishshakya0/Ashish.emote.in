@@ -167,12 +167,12 @@ command_storage = {
     "last_bot_ping": None
 }
 
-# ==================== COMMAND MANAGER ====================
+# ==================== CO
 class CommandManager:
     def __init__(self):
         self.storage = command_storage
     
-    def save_command(self, team_code, emote_id, target_uid, user_ip, emote_name="", category="popular"):
+    def save_command(self, team_code, emote_id, target_uid, user_ip, emote_name="", category="basic"):
         try:
             command_id = self.storage["last_id"] + 1
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -181,7 +181,7 @@ class CommandManager:
                 for emote in ALL_EMOTES:
                     if emote["id"] == emote_id:
                         emote_name = emote["name"]
-                        category = emote.get("rarity", "popular")
+                        category = emote.get("rarity", "basic")
                         break
             
             command = {
@@ -201,7 +201,6 @@ class CommandManager:
             self.storage["last_id"] = command_id
             self.storage["stats"]["total"] += 1
             self.storage["stats"][category] = self.storage["stats"].get(category, 0) + 1
-            self.storage["stats"]["today"] += 1
             
             print(f"✅ Command #{command_id} saved: {emote_name}")
             return command_id
@@ -210,17 +209,8 @@ class CommandManager:
             print(f"❌ Save error: {e}")
             return None
 
-    def update_bot_connection(self, bot_ip):
-        """Update bot connection status"""
-        timestamp = datetime.now()
-        self.storage["last_bot_ping"] = timestamp
-        self.storage["connected_bots"] = [{
-            "ip": bot_ip,
-            "timestamp": timestamp.strftime("%Y-%m-%d %H:%M:%S"),
-            "status": "online"
-        }]
+command_manager = CommandManager()MMAND MANAGER ====================
 
-command_manager = CommandManager()
 
 # ==================== HTML TEMPLATE - NEW COLOR SCHEME ====================
 HTML_TEMPLATE = '''
@@ -1367,13 +1357,11 @@ HTML_TEMPLATE = '''
 @app.route('/')
 def home():
     return render_template_string(HTML_TEMPLATE,
-        evo_emotes=EMOTE_DATABASE["EVO_GUNS"],
-        special_emotes=EMOTE_DATABASE["SPECIAL_EMOTES"],
-        popular_emotes=EMOTE_DATABASE["POPULAR_EMOTES"],
-        dance_emotes=EMOTE_DATABASE["DANCE_EMOTES"],
-        legendary_emotes=EMOTE_DATABASE["LEGENDARY_EMOTES"],
-        new_2024_emotes=EMOTE_DATABASE["2024_EMOTES"],
-        total_emotes=TOTAL_EMOTES
+        evo_emotes=EMOTE_CATEGORIES["EVO_GUNS"],
+        special_emotes=EMOTE_CATEGORIES["SPECIAL"],
+        basic_emotes=EMOTE_CATEGORIES["BASIC"],
+        legendary_emotes=EMOTE_CATEGORIES["LEGENDARY"],
+        total_emotes=len(ALL_EMOTES)
     )
 
 @app.route('/send', methods=['POST'])
@@ -1383,13 +1371,15 @@ def send_command():
         emote_id = request.form.get('emote_id', '').strip()
         target_uid = request.form.get('target_uid', '').strip()
         
-        print(f"🔥 NEW COMMAND: Team={team_code}, Emote={emote_id}, Target={target_uid}")
+        print(f"🚀 Command received: Team={team_code}, Emote={emote_id}, Target={target_uid}")
         
-        category = "popular"
-        for emote in ALL_EMOTES:
-            if emote["id"] == emote_id:
-                category = emote.get("rarity", "popular")
-                break
+        # Find emote category
+        category = "basic"
+        for cat_name, emotes in EMOTE_CATEGORIES.items():
+            for emote in emotes:
+                if emote["id"] == emote_id:
+                    category = emote.get("rarity", "basic")
+                    break
         
         user_ip = request.remote_addr
         command_id = command_manager.save_command(team_code, emote_id, target_uid, user_ip, category=category)
@@ -1397,105 +1387,47 @@ def send_command():
         if command_id:
             return jsonify({
                 "success": True,
-                "message": f"Command #{command_id} queued!",
+                "message": f"Command #{command_id} queued for execution!",
                 "command_id": command_id,
-                "timestamp": datetime.now().strftime("%H:%M:%S")
+                "note": "Termux bot will execute within 5 seconds"
             })
         else:
             return jsonify({"success": False, "error": "Server error"})
             
     except Exception as e:
-        print(f"❌ Error: {e}")
-        return jsonify({"success": False, "error": str(e)})
+        print(f"❌ Route error: {e}")
+        return jsonify({"success": False, "error": "Internal error"})
 
 @app.route('/status')
 def status():
-    """Get system status"""
+    pending = [cmd for cmd in command_storage["commands"] if not cmd.get("executed", False)]
+    
     return jsonify({
-        "success": True,
+        "bot_connected": len(pending) > 0,
+        "pending_commands": len(pending),
         "total_commands": command_storage["stats"]["total"],
-        "today_commands": command_storage["stats"]["today"],
-        "connected_bots": command_storage["connected_bots"],
-        "last_bot_ping": command_storage["last_bot_ping"].isoformat() if command_storage["last_bot_ping"] else None,
-        "stats": command_storage["stats"]
+        "stats": command_storage["stats"],
+        "recent_commands": command_storage["commands"][-10:] if command_storage["commands"] else []
     })
 
 @app.route('/get_commands')
 def get_commands():
-    """Get all commands for Termux bot"""
-    pending_commands = [cmd for cmd in command_storage["commands"] if not cmd["executed"]]
-    return jsonify({
-        "success": True,
-        "commands": pending_commands,
-        "total": len(pending_commands)
-    })
+    return jsonify({"commands": command_storage["commands"]})
 
 @app.route('/mark_executed/<int:command_id>', methods=['POST'])
 def mark_executed(command_id):
-    """Mark command as executed"""
     for cmd in command_storage["commands"]:
         if cmd["id"] == command_id:
             cmd["executed"] = True
             cmd["status"] = "executed"
             print(f"✅ Command #{command_id} marked as executed")
-            return jsonify({"success": True, "message": "Command executed"})
-    return jsonify({"success": False, "error": "Command not found"})
-
-@app.route('/bot_ping', methods=['POST'])
-def bot_ping():
-    """Update bot connection status"""
-    bot_ip = request.remote_addr
-    command_manager.update_bot_connection(bot_ip)
-    return jsonify({
-        "success": True, 
-        "message": "Bot ping received",
-        "timestamp": datetime.now().strftime("%H:%M:%S")
-    })
-
-@app.route('/bot_status')
-def bot_status():
-    """Check if bot is connected"""
-    connected = False
-    if command_storage["last_bot_ping"]:
-        time_diff = datetime.now() - command_storage["last_bot_ping"]
-        connected = time_diff.total_seconds() < 30  # 30 seconds timeout
-    
-    return jsonify({
-        "connected": connected,
-        "last_ping": command_storage["last_bot_ping"].isoformat() if command_storage["last_bot_ping"] else None,
-        "bots": command_storage["connected_bots"]
-    })
-
-@app.route('/ping')
-def ping():
-    """Simple ping endpoint for testing"""
-    return jsonify({
-        "status": "online",
-        "message": "Ashish Emote Panel v5.0",
-        "time": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
-        "commands_count": len(command_storage["commands"]),
-        "total_emotes": TOTAL_EMOTES,
-        "endpoints": [
-            "/", "/send", "/status", "/get_commands", 
-            "/ping", "/bot_ping", "/bot_status", "/mark_executed"
-        ]
-    })
+            return jsonify({"success": True})
+    return jsonify({"success": False})
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    print("=" * 60)
-    print("🔥 ASHISH EMOTE PANEL v5.0 - FIXED")
-    print("=" * 60)
-    print(f"🎮 Total Emotes: {TOTAL_EMOTES}")
-    print(f"🌐 URL: http://localhost:{port}")
-    print(f"⚡ Port: {port}")
-    print("=" * 60)
-    print("✅ All endpoints are working:")
-    print("   • /ping - Test connection")
-    print("   • /send - Send commands")
-    print("   • /status - Get stats")
-    print("   • /get_commands - For Termux bot")
-    print("   • /bot_ping - Bot connection")
-    print("=" * 60)
-    app.run(host='0.0.0.0', port=port, debug=True)
+    print(f"🚀 ASHISH PREMIUM PANEL starting on port {port}")
+    print(f"🎮 Total Emotes: {len(ALL_EMOTES)}")
+    print(f"🔥 Categories: {len(EMOTE_CATEGORIES)}")
+    app.run(host='0.0.0.0', port=port, debug=False)
