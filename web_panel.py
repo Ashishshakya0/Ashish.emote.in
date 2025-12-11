@@ -1,7 +1,9 @@
+# web_panel.py
 from flask import Flask, render_template_string, request, jsonify
 from datetime import datetime
 import json
 import os
+import re
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ashish-premium-panel-2024')
@@ -150,80 +152,62 @@ class CommandManager:
 
 command_manager = CommandManager()
 
-# ==================== PROFESSIONAL HTML TEMPLATE ====================
+# ==================== MAIN.PY से लिया गया UI TEMPLATE ====================
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
+    <title>🔥 ASHISH EMOTE PANEL v2.0</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 ASHISH | PREMIUM EMOTE PANEL</title>
-    
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <!-- Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Orbitron:wght@400;500;700&display=swap" rel="stylesheet">
-    
     <style>
         :root {
-            --primary: #6d28d9;
-            --primary-dark: #5b21b6;
-            --secondary: #0ea5e9;
-            --accent: #f97316;
-            --success: #10b981;
-            --danger: #ef4444;
-            --warning: #f59e0b;
-            --dark: #0f172a;
-            --darker: #020617;
-            --light: #f8fafc;
-            --gray: #64748b;
-            --gray-dark: #334155;
-            
-            --evo: #ec4899;
-            --special: #8b5cf6;
-            --basic: #10b981;
-            --legendary: #f59e0b;
-            --mythic: linear-gradient(135deg, #ec4899, #8b5cf6, #0ea5e9);
-            
-            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-            --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            
-            --radius: 12px;
-            --radius-lg: 16px;
-            --radius-xl: 20px;
+            --primary: #ff0000;
+            --secondary: #00ff00;
+            --accent: #00ffff;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --gradient: linear-gradient(135deg, #ff0000 0%, #ff00ff 50%, #00ffff 100%);
+            --card-bg: rgba(20, 20, 20, 0.7);
+            --glass: rgba(255, 255, 255, 0.05);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
         }
 
         body {
-            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
-            color: var(--light);
-            font-family: 'Poppins', sans-serif;
+            background: var(--dark);
+            color: #fff;
             min-height: 100vh;
-            line-height: 1.6;
+            height: 100vh;
+            overflow-y: auto;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(255, 0, 0, 0.05) 0%, transparent 20%),
+                radial-gradient(circle at 90% 80%, rgba(0, 255, 255, 0.05) 0%, transparent 20%);
+            overflow-x: hidden;
         }
 
         .container {
-            max-width: 1600px;
-            margin: 0 auto;
+            max-width: 1100px;
+            margin: 20px auto;
             padding: 20px;
+            padding-bottom: 100px !important; 
+            min-height: 120vh; 
         }
 
-        /* ================= HEADER ================= */
         .header {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-xl);
-            padding: 40px;
+            text-align: center;
             margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow-xl);
+            padding: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 0, 0, 0.3);
+            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2),
+                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
         }
@@ -231,511 +215,318 @@ HTML_TEMPLATE = '''
         .header::before {
             content: '';
             position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 4px;
-            background: var(--mythic);
-            z-index: 1;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: var(--gradient);
+            opacity: 0.1;
+            animation: rotate 20s linear infinite;
         }
 
-        .logo-container {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-            gap: 20px;
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-
-        .logo-icon {
-            background: var(--mythic);
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            box-shadow: 0 0 20px rgba(236, 72, 153, 0.3);
-        }
-
-        .logo-text {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            background: linear-gradient(135deg, var(--secondary), var(--accent));
+        .header h1 {
+            font-size: 3rem;
+            background: var(--gradient);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
+            position: relative;
+            letter-spacing: 2px;
         }
 
-        .version-badge {
-            background: var(--accent);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 50px;
-            font-size: 0.9rem;
-            font-weight: 600;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .tagline {
-            text-align: center;
-            color: var(--secondary);
-            font-size: 1.2rem;
-            margin-bottom: 30px;
-            opacity: 0.9;
-        }
-
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 20px;
-            margin-top: 30px;
-        }
-
-        .stat-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius-lg);
-            padding: 24px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            transition: all 0.3s ease;
-        }
-
-        .stat-card:hover {
-            transform: translateY(-5px);
-            border-color: var(--secondary);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .stat-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 8px;
-            color: var(--secondary);
-        }
-
-        .stat-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-
-        /* ================= QUICK SEND ================= */
-        .quick-send-section {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .section-title {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin-bottom: 30px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            color: var(--light);
-        }
-
-        .section-title i {
+        .header h2 {
             color: var(--accent);
-            font-size: 24px;
-        }
-
-        .input-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-bottom: 30px;
-        }
-
-        .form-group {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            font-weight: 300;
             position: relative;
         }
 
-        .form-label {
-            display: block;
-            margin-bottom: 10px;
-            font-weight: 500;
-            color: var(--light);
-            font-size: 0.95rem;
+        .section {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .form-control {
+        .section:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 35px rgba(255, 0, 0, 0.2);
+        }
+
+        .section h3 {
+            color: var(--secondary);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .section h3 i {
+            color: var(--accent);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .input-group input {
             width: 100%;
-            padding: 16px 20px 16px 50px;
-            background: rgba(255, 255, 255, 0.07);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: var(--radius);
-            color: var(--light);
-            font-family: 'Poppins', sans-serif;
-            font-size: 1rem;
+            padding: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
 
-        .form-control:focus {
+        .input-group input:focus {
             outline: none;
-            border-color: var(--secondary);
-            background: rgba(255, 255, 255, 0.1);
-            box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
-        }
-
-        .form-icon {
-            position: absolute;
-            left: 20px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: var(--gray);
-            font-size: 18px;
+            border-color: var(--accent);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
         }
 
         .btn {
-            padding: 16px 32px;
-            border: none;
-            border-radius: var(--radius);
-            font-family: 'Poppins', sans-serif;
-            font-weight: 600;
-            font-size: 1rem;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            background: var(--gradient);
             color: white;
-            width: 100%;
-            font-size: 1.1rem;
+            border: none;
             padding: 18px;
-        }
-
-        .btn-primary:hover {
-            transform: translateY(-3px);
-            box-shadow: var(--shadow-lg);
-        }
-
-        /* ================= TABS ================= */
-        .tabs-section {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .tabs-header {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 30px;
-            flex-wrap: wrap;
-        }
-
-        .tab-btn {
-            padding: 15px 30px;
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid transparent;
-            border-radius: var(--radius);
-            color: var(--light);
-            font-family: 'Poppins', sans-serif;
-            font-weight: 500;
-            font-size: 1rem;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: bold;
             cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
         }
 
-        .tab-btn:hover {
-            background: rgba(255, 255, 255, 0.1);
-            transform: translateY(-2px);
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
         }
 
-        .tab-btn.active {
-            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
-            border-color: var(--secondary);
-            box-shadow: var(--shadow);
+        .btn:hover::before {
+            left: 100%;
         }
 
-        .tab-content {
-            display: none;
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.4);
         }
 
-        .tab-content.active {
-            display: block;
-            animation: fadeIn 0.3s ease;
+        .btn:active {
+            transform: translateY(0);
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
+        /* EVO GUN SECTION */
+        .evo-section {
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(0, 0, 0, 0.8));
+            border: 2px solid var(--primary);
         }
 
-        /* ================= EMOTE CARDS ================= */
-        .emote-grid {
+        .evo-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .evo-btn {
+            background: linear-gradient(135deg, #ff0000, #ff5500);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .evo-btn::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .evo-btn:hover::after {
+            opacity: 1;
+        }
+
+        .evo-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
+        }
+
+        .select-all-btn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            grid-column: 1 / -1;
+            padding: 20px;
+            font-size: 1.2rem;
+            margin-top: 10px;
+        }
+
+        /* Emotes Grid */
+        .emotes-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
 
         .emote-card {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius);
+            background: rgba(30, 30, 30, 0.8);
+            border-radius: 12px;
             padding: 20px;
             border: 1px solid rgba(255, 255, 255, 0.1);
             transition: all 0.3s ease;
-            display: flex;
-            align-items: center;
-            gap: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .emote-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--gradient);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .emote-card:hover::before {
+            opacity: 1;
         }
 
         .emote-card:hover {
             transform: translateY(-5px);
-            border-color: var(--secondary);
-            box-shadow: var(--shadow-lg);
-        }
-
-        .emote-icon {
-            width: 60px;
-            height: 60px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 24px;
-            flex-shrink: 0;
-        }
-
-        .evo .emote-icon { background: rgba(236, 72, 153, 0.2); color: var(--evo); }
-        .special .emote-icon { background: rgba(139, 92, 246, 0.2); color: var(--special); }
-        .basic .emote-icon { background: rgba(16, 185, 129, 0.2); color: var(--basic); }
-        .legendary .emote-icon { background: rgba(245, 158, 11, 0.2); color: var(--legendary); }
-
-        .emote-info {
-            flex: 1;
-            min-width: 0;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+            border-color: var(--primary);
         }
 
         .emote-name {
+            color: #ffcc00;
+            font-size: 1.3rem;
+            margin-bottom: 10px;
             font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 4px;
-            color: var(--light);
         }
 
         .emote-id {
+            color: var(--accent);
+            background: rgba(0, 0, 0, 0.5);
+            padding: 8px 12px;
+            border-radius: 6px;
+            margin-bottom: 15px;
             font-family: monospace;
             font-size: 0.9rem;
-            color: var(--gray);
         }
 
-        .emote-action {
-            display: flex;
-            gap: 10px;
-        }
-
-        .btn-sm {
-            padding: 8px 16px;
-            font-size: 0.9rem;
+        .send-btn {
+            background: linear-gradient(135deg, #00ff00, #00cc00);
+            color: #000;
+            border: none;
+            padding: 12px;
             border-radius: 8px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s ease;
         }
 
-        .btn-select {
-            background: rgba(255, 255, 255, 0.1);
-            color: var(--light);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+        .send-btn:hover {
+            background: linear-gradient(135deg, #00ff88, #00ff00);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
         }
 
-        .btn-select:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-
-        .btn-send {
-            background: var(--secondary);
-            color: white;
-        }
-
-        .btn-send:hover {
-            background: #0284c7;
-        }
-
-        /* ================= STATUS PANEL ================= */
-        .status-section {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%);
-            backdrop-filter: blur(10px);
-            border-radius: var(--radius-xl);
-            padding: 40px;
-            margin-bottom: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: var(--shadow-xl);
-        }
-
-        .status-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
-            margin-bottom: 30px;
-        }
-
-        .status-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius);
-            padding: 24px;
-            text-align: center;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .status-label {
-            color: var(--gray);
-            font-size: 0.9rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
-        }
-
-        .status-value {
-            font-family: 'Orbitron', sans-serif;
-            font-size: 2rem;
-            font-weight: 700;
-        }
-
-        .online { color: var(--success); }
-        .offline { color: var(--danger); }
-        .pending { color: var(--warning); }
-
-        .commands-history {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: var(--radius);
-            padding: 24px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-
-        .history-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 20px;
-            color: var(--light);
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .command-item {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: var(--radius);
-            padding: 16px;
-            margin-bottom: 12px;
-            border-left: 4px solid var(--secondary);
-        }
-
-        .command-header {
+        /* Status Bar */
+        .status-bar {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(10, 10, 10, 0.95);
+            padding: 15px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 10px;
-        }
-
-        .command-id {
-            font-family: 'Orbitron', sans-serif;
-            font-weight: 600;
-            color: var(--secondary);
-        }
-
-        .command-time {
-            color: var(--gray);
-            font-size: 0.9rem;
-        }
-
-        .command-details {
-            color: var(--light);
-            font-size: 0.95rem;
-            line-height: 1.5;
-        }
-
-        .command-status {
-            display: inline-block;
-            padding: 4px 12px;
-            border-radius: 50px;
-            font-size: 0.8rem;
-            font-weight: 500;
-            margin-top: 8px;
-        }
-
-        .status-executed { background: rgba(16, 185, 129, 0.2); color: var(--success); }
-        .status-pending { background: rgba(245, 158, 11, 0.2); color: var(--warning); }
-
-        /* ================= FOOTER ================= */
-        .footer {
-            background: linear-gradient(135deg, rgba(15, 23, 42, 0.9) 0%, rgba(2, 6, 23, 0.9) 100%);
+            border-top: 2px solid var(--primary);
             backdrop-filter: blur(10px);
-            border-radius: var(--radius-xl);
-            padding: 30px 40px;
-            margin-top: 30px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            z-index: 1000;
         }
 
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 30px;
-        }
-
-        .footer-item {
+        .status-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            color: var(--gray);
+            gap: 10px;
         }
 
-        .footer-item i {
-            color: var(--secondary);
-            font-size: 18px;
-        }
-
-        .status-indicator {
+        .status-dot {
             width: 10px;
             height: 10px;
             border-radius: 50%;
-            background: var(--success);
+            background: #00ff00;
+            animation: pulse 2s infinite;
         }
 
-        /* ================= NOTIFICATION ================= */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Notification */
         .notification {
             position: fixed;
             top: 20px;
             right: 20px;
-            padding: 16px 24px;
-            border-radius: var(--radius);
+            padding: 20px;
+            border-radius: 10px;
             display: none;
-            align-items: center;
-            gap: 12px;
-            z-index: 1000;
-            max-width: 400px;
-            box-shadow: var(--shadow-xl);
+            font-weight: bold;
+            z-index: 2000;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
             animation: slideIn 0.3s ease;
+            max-width: 400px;
         }
 
         @keyframes slideIn {
@@ -744,619 +535,420 @@ HTML_TEMPLATE = '''
         }
 
         .notification.success {
-            background: var(--success);
-            color: white;
+            background: linear-gradient(135deg, rgba(0, 255, 0, 0.9), rgba(0, 200, 0, 0.9));
+            color: #000;
         }
 
         .notification.error {
-            background: var(--danger);
+            background: linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(200, 0, 0, 0.9));
             color: white;
         }
 
-        .notification i {
-            font-size: 20px;
+        .notification.warning {
+            background: linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(200, 200, 0, 0.9));
+            color: #000;
         }
 
-        /* ================= RESPONSIVE ================= */
-        @media (max-width: 1200px) {
-            .container { padding: 15px; }
-            .header, .quick-send-section, .tabs-section, .status-section { padding: 30px; }
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 10px;
         }
 
+        .progress-fill {
+            height: 100%;
+            background: var(--gradient);
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+
+        /* TCP Status */
+        .tcp-status {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 10px 15px;
+            border-radius: 10px;
+            border: 2px solid var(--primary);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+        }
+
+        .tcp-connected {
+            color: #00ff00;
+            font-weight: bold;
+        }
+
+        .tcp-disconnected {
+            color: #ff0000;
+            font-weight: bold;
+        }
+
+        /* Responsive */
         @media (max-width: 768px) {
-            .logo-text { font-size: 2rem; }
-            .logo-icon { width: 50px; height: 50px; font-size: 20px; }
-            .section-title { font-size: 1.5rem; }
-            .input-grid { grid-template-columns: 1fr; }
-            .tabs-header { justify-content: center; }
-            .tab-btn { flex: 1; justify-content: center; min-width: 140px; }
-            .emote-grid { grid-template-columns: 1fr; }
-            .footer-grid { grid-template-columns: 1fr; text-align: center; }
-            .footer-item { justify-content: center; }
-        }
-
-        @media (max-width: 480px) {
-            .header, .quick-send-section, .tabs-section, .status-section { padding: 20px; }
-            .logo-container { flex-direction: column; align-items: center; }
-            .logo { flex-direction: column; text-align: center; }
-            .section-title { font-size: 1.3rem; }
-            .stat-value { font-size: 2rem; }
-            .btn { padding: 14px 24px; }
+            .container {
+                padding: 10px;
+                margin: 10px;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .emotes-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .evo-buttons {
+                grid-template-columns: 1fr;
+            }
+            
+            .status-bar {
+                flex-direction: column;
+                gap: 10px;
+                padding: 10px;
+                text-align: center;
+            }
+            
+            .tcp-status {
+                position: relative;
+                top: 0;
+                left: 0;
+                margin-bottom: 20px;
+                width: 100%;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- NOTIFICATION -->
-    <div class="notification" id="notification">
-        <i class="fas fa-check-circle"></i>
-        <span id="notification-message"></span>
+    <div class="tcp-status" id="tcpStatus">
+        <i class="fas fa-plug"></i> TCP: <span class="tcp-connected" id="tcpConnStatus">CONNECTING...</span>
     </div>
-
+    
     <div class="container">
-        <!-- HEADER -->
         <div class="header">
-            <div class="logo-container">
-                <div class="logo">
-                    <div class="logo-icon">
-                        <i class="fas fa-bolt"></i>
-                    </div>
-                    <div>
-                        <div class="logo-text">ASHISH EMOTE PANEL</div>
-                        <div class="tagline">⚡ Premium Emote Delivery System | Termux TCP Integration</div>
-                    </div>
-                </div>
-                <div class="version-badge">
-                    <i class="fas fa-star"></i>
-                    PRO 3.0
-                </div>
-            </div>
-
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-value" id="totalEmotes">{{ total_emotes }}</div>
-                    <div class="stat-label">TOTAL EMOTES</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="totalCommands">0</div>
-                    <div class="stat-label">COMMANDS SENT</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="botStatus">ONLINE</div>
-                    <div class="stat-label">BOT STATUS</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-value" id="responseTime">0ms</div>
-                    <div class="stat-label">RESPONSE TIME</div>
-                </div>
-            </div>
+            <h1><i class="fas fa-fire"></i> ASHISH EMOTE PANEL v2.0</h1>
+            <h2>Premium Emote Sending System with EVO Guns | TCP Connected</h2>
         </div>
-
-        <!-- QUICK SEND SECTION -->
-        <div class="quick-send-section">
-            <h2 class="section-title">
-                <i class="fas fa-bolt"></i> INSTANT EMOTE ATTACK
-            </h2>
+        
+        <form id="mainForm" method="POST">
+            <div class="section">
+                <h3><i class="fas fa-users"></i> TEAM INFORMATION</h3>
+                <div class="input-group">
+                    <label>TEAM CODE (7 digits)</label>
+                    <input type="text" name="team_code" id="team_code" placeholder="Enter 7-digit team code" required 
+                           pattern="[0-9]{7}" title="7 digit team code">
+                </div>
+            </div>
             
-            <div class="input-grid">
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-users"></i> TEAM CODE</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-hashtag form-icon"></i>
-                        <input type="text" class="form-control" id="teamCode" 
-                               placeholder="Enter 7-digit team code" pattern="\d{7}" maxlength="7" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-user"></i> TARGET UID</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-crosshairs form-icon"></i>
-                        <input type="text" class="form-control" id="targetUid" 
-                               placeholder="Enter target UID (8-11 digits)" pattern="\d{8,11}" required>
-                    </div>
-                </div>
-                
-                <div class="form-group">
-                    <label class="form-label"><i class="fas fa-smile"></i> EMOTE ID</label>
-                    <div class="input-wrapper">
-                        <i class="fas fa-magic form-icon"></i>
-                        <input type="text" class="form-control" id="emoteId" 
-                               placeholder="909033001" pattern="\d{9}" required>
-                    </div>
+            <div class="section">
+                <h3><i class="fas fa-user"></i> TARGET PLAYER UID</h3>
+                <div class="input-group">
+                    <label>TARGET UID (Required)</label>
+                    <input type="text" name="target_uid" id="target_uid" placeholder="Enter target UID (8-11 digits)" required 
+                           pattern="[0-9]{8,11}" title="8-11 digits">
                 </div>
             </div>
-
-            <button class="btn btn-primary" onclick="sendQuickCommand()">
-                <i class="fas fa-rocket"></i> LAUNCH EMOTE ATTACK
+            
+            <button type="button" class="btn" onclick="sendQuickCommand()">
+                <i class="fas fa-bolt"></i> SEND EMOTE ATTACK
             </button>
-        </div>
-
-        <!-- TABS SECTION -->
-        <div class="tabs-section">
-            <div class="tabs-header">
-                <button class="tab-btn active" onclick="openTab('evo')">
-                    <i class="fas fa-gun"></i> EVO GUNS
+        </form>
+        
+        <!-- EVO GUN SECTION -->
+        <div class="section evo-section" style="display: block;">
+            <h3><i class="fas fa-gun"></i> 🎯 EVO GUN EMOTES</h3>
+            <p style="color: #aaa; margin-bottom: 15px;">Select EVO gun emotes to send instantly via TCP</p>
+            
+            <div class="evo-buttons">
+                <button type="button" class="evo-btn select-all-btn" onclick="selectAllEvo()">
+                    <i class="fas fa-check-double"></i> SELECT ALL EVO GUNS
                 </button>
-                <button class="tab-btn" onclick="openTab('special')">
-                    <i class="fas fa-star"></i> SPECIAL
+                
+                {% for emote in evo_emotes %}
+                <button type="button" class="evo-btn" onclick="sendEvoEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
                 </button>
-                <button class="tab-btn" onclick="openTab('basic')">
-                    <i class="fas fa-gamepad"></i> BASIC
-                </button>
-                <button class="tab-btn" onclick="openTab('legendary')">
-                    <i class="fas fa-crown"></i> LEGENDARY
-                </button>
-                <button class="tab-btn" onclick="openTab('status')">
-                    <i class="fas fa-chart-bar"></i> STATUS
-                </button>
-            </div>
-
-            <!-- EVO GUNS TAB -->
-            <div id="evo" class="tab-content active">
-                <div class="emote-grid">
-                    {% for emote in evo_emotes %}
-                    <div class="emote-card evo">
-                        <div class="emote-icon">
-                            <i class="fas {{ emote.icon }}"></i>
-                        </div>
-                        <div class="emote-info">
-                            <div class="emote-name">{{ emote.name }}</div>
-                            <div class="emote-id">ID: {{ emote.id }}</div>
-                        </div>
-                        <div class="emote-action">
-                            <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i> SELECT
-                            </button>
-                            <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i> SEND
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- SPECIAL EMOTES TAB -->
-            <div id="special" class="tab-content">
-                <div class="emote-grid">
-                    {% for emote in special_emotes %}
-                    <div class="emote-card special">
-                        <div class="emote-icon">
-                            <i class="fas {{ emote.icon }}"></i>
-                        </div>
-                        <div class="emote-info">
-                            <div class="emote-name">{{ emote.name }}</div>
-                            <div class="emote-id">ID: {{ emote.id }}</div>
-                        </div>
-                        <div class="emote-action">
-                            <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i> SELECT
-                            </button>
-                            <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i> SEND
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- BASIC EMOTES TAB -->
-            <div id="basic" class="tab-content">
-                <div class="emote-grid">
-                    {% for emote in basic_emotes %}
-                    <div class="emote-card basic">
-                        <div class="emote-icon">
-                            <i class="fas {{ emote.icon }}"></i>
-                        </div>
-                        <div class="emote-info">
-                            <div class="emote-name">{{ emote.name }}</div>
-                            <div class="emote-id">ID: {{ emote.id }}</div>
-                        </div>
-                        <div class="emote-action">
-                            <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i> SELECT
-                            </button>
-                            <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i> SEND
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- LEGENDARY EMOTES TAB -->
-            <div id="legendary" class="tab-content">
-                <div class="emote-grid">
-                    {% for emote in legendary_emotes %}
-                    <div class="emote-card legendary">
-                        <div class="emote-icon">
-                            <i class="fas {{ emote.icon }}"></i>
-                        </div>
-                        <div class="emote-info">
-                            <div class="emote-name">{{ emote.name }}</div>
-                            <div class="emote-id">ID: {{ emote.id }}</div>
-                        </div>
-                        <div class="emote-action">
-                            <button class="btn btn-sm btn-select" onclick="useEmote('{{ emote.id }}', '{{ emote.name }}')">
-                                <i class="fas fa-mouse-pointer"></i> SELECT
-                            </button>
-                            <button class="btn btn-sm btn-send" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}', event)">
-                                <i class="fas fa-paper-plane"></i> SEND
-                            </button>
-                        </div>
-                    </div>
-                    {% endfor %}
-                </div>
-            </div>
-
-            <!-- STATUS TAB -->
-            <div id="status" class="tab-content">
-                <div class="status-section">
-                    <h2 class="section-title">
-                        <i class="fas fa-chart-bar"></i> SYSTEM STATUS
-                    </h2>
-                    
-                    <div class="status-grid">
-                        <div class="status-item">
-                            <div class="status-label">WEB PANEL</div>
-                            <div class="status-value online">ONLINE</div>
-                        </div>
-                        
-                        <div class="status-item">
-                            <div class="status-label">TERMUX BOT</div>
-                            <div class="status-value" id="botStatusDisplay">ONLINE</div>
-                        </div>
-                        
-                        <div class="status-item">
-                            <div class="status-label">QUEUED COMMANDS</div>
-                            <div class="status-value pending" id="queueCount">0</div>
-                        </div>
-                        
-                        <div class="status-item">
-                            <div class="status-label">RESPONSE TIME</div>
-                            <div class="status-value" id="pingTime">0ms</div>
-                        </div>
-                    </div>
-                    
-                    <div class="commands-history">
-                        <h3 class="history-title">
-                            <i class="fas fa-history"></i> RECENT COMMANDS
-                        </h3>
-                        
-                        <div id="commandsHistory">
-                            <div style="text-align: center; color: var(--gray); padding: 40px;">
-                                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px;"></i>
-                                <p>No commands yet. Send your first emote!</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                {% endfor %}
             </div>
         </div>
 
-        <!-- FOOTER -->
-        <div class="footer">
-            <div class="footer-grid">
-                <div class="footer-item">
-                    <div class="status-indicator"></div>
-                    <span>PANEL STATUS: <strong style="color: var(--success);">ONLINE</strong></span>
+        <!-- SPECIAL EMOTES SECTION -->
+        <div class="section" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #00ffff;">
+            <h3><i class="fas fa-star"></i> SPECIAL EMOTES</h3>
+            <div class="emotes-grid">
+                {% for emote in special_emotes %}
+                <div class="emote-card">
+                    <div class="emote-name">
+                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                    </div>
+                    <div class="emote-id">ID: {{ emote.id }}</div>
+                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
+                        <i class="fas fa-paper-plane"></i> SEND EMOTE
+                    </button>
                 </div>
-                <div class="footer-item">
-                    <i class="fas fa-robot"></i>
-                    <span>BOT: <strong id="footerBotStatus" style="color: var(--warning);">CONNECTING</strong></span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- BASIC EMOTES SECTION -->
+        <div class="section" style="background: linear-gradient(135deg, rgba(157, 78, 221, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #9d4edd;">
+            <h3><i class="fas fa-gamepad"></i> BASIC EMOTES</h3>
+            <div class="emotes-grid">
+                {% for emote in basic_emotes %}
+                <div class="emote-card">
+                    <div class="emote-name">
+                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                    </div>
+                    <div class="emote-id">ID: {{ emote.id }}</div>
+                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
+                        <i class="fas fa-paper-plane"></i> SEND EMOTE
+                    </button>
                 </div>
-                <div class="footer-item">
-                    <i class="fas fa-user-ninja"></i>
-                    <span>DEVELOPER: <strong>ASHISH</strong></span>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- LEGENDARY EMOTES SECTION -->
+        <div class="section" style="background: linear-gradient(135deg, rgba(255, 209, 102, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #ffd166;">
+            <h3><i class="fas fa-crown"></i> LEGENDARY EMOTES</h3>
+            <div class="emotes-grid">
+                {% for emote in legendary_emotes %}
+                <div class="emote-card">
+                    <div class="emote-name">
+                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                    </div>
+                    <div class="emote-id">ID: {{ emote.id }}</div>
+                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
+                        <i class="fas fa-paper-plane"></i> SEND EMOTE
+                    </button>
                 </div>
-                <div class="footer-item">
-                    <i class="fab fa-instagram"></i>
-                    <span>@ashish.shakya0001</span>
-                </div>
+                {% endfor %}
             </div>
         </div>
     </div>
-
+    
+    <div class="status-bar">
+        <div class="status-item">
+            <div class="status-dot"></div>
+            <span>Status: <span id="status">ONLINE</span></span>
+        </div>
+        <div class="status-item">
+            <i class="fas fa-bolt"></i>
+            <span>Commands: <span id="count">0</span></span>
+        </div>
+        <div class="status-item">
+            <i class="fas fa-plug"></i>
+            <span>TCP: <span id="tcpConn">CONNECTED</span></span>
+        </div>
+        <div class="status-item">
+            <i class="fas fa-user"></i>
+            <span>Developer: ASHISH</span>
+        </div>
+        <div class="status-item">
+            <i class="fab fa-instagram"></i>
+            <span>@ashish.shakya0001</span>
+        </div>
+    </div>
+    
+    <div class="notification" id="notification"></div>
+    
     <script>
-        // ================= CONFIGURATION =================
         let commandCount = 0;
-        let botConnected = false;
+        let progressInterval;
+        let tcpConnected = true; // Assume connected
         
-        // ================= INITIALIZE =================
-        document.addEventListener('DOMContentLoaded', function() {
-            updateStats();
-            checkBotStatus();
-            loadCommandsHistory();
+        function updateTCPStatus(connected) {
+            tcpConnected = connected;
+            const statusElem = document.getElementById('tcpConnStatus');
+            const connElem = document.getElementById('tcpConn');
             
-            // Auto-refresh every 5 seconds
-            setInterval(checkBotStatus, 5000);
-            setInterval(loadCommandsHistory, 3000);
-            setInterval(updateStats, 10000);
-            
-            // Load saved data from localStorage
-            loadSavedData();
-        });
-        
-        // ================= SAVE AND LOAD USER DATA =================
-        function saveUserData() {
-            const teamCode = document.getElementById('teamCode').value;
-            const targetUid = document.getElementById('targetUid').value;
-            
-            localStorage.setItem('teamCode', teamCode);
-            localStorage.setItem('targetUid', targetUid);
-        }
-        
-        function loadSavedData() {
-            const savedTeamCode = localStorage.getItem('teamCode');
-            const savedTargetUid = localStorage.getItem('targetUid');
-            
-            if (savedTeamCode) {
-                document.getElementById('teamCode').value = savedTeamCode;
-            }
-            
-            if (savedTargetUid) {
-                document.getElementById('targetUid').value = savedTargetUid;
-            }
-            
-            // Auto-save when user types
-            document.getElementById('teamCode').addEventListener('input', saveUserData);
-            document.getElementById('targetUid').addEventListener('input', saveUserData);
-        }
-        
-        // ================= TAB SYSTEM =================
-        function openTab(tabName) {
-            // Hide all tabs
-            document.querySelectorAll('.tab-content').forEach(tab => {
-                tab.classList.remove('active');
-            });
-            
-            // Remove active from buttons
-            document.querySelectorAll('.tab-btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            
-            // Show selected tab
-            document.getElementById(tabName).classList.add('active');
-            document.querySelector(`[onclick="openTab('${tabName}')"]`).classList.add('active');
-        }
-        
-        // ================= EMOTE FUNCTIONS =================
-        function useEmote(emoteId, emoteName) {
-            document.getElementById('emoteId').value = emoteId;
-            showNotification(`✅ ${emoteName} selected!`, 'success');
-            
-            // Focus on Team Code if empty
-            if (!document.getElementById('teamCode').value) {
-                document.getElementById('teamCode').focus();
-            } else if (!document.getElementById('targetUid').value) {
-                document.getElementById('targetUid').focus();
+            if (connected) {
+                statusElem.className = 'tcp-connected';
+                statusElem.textContent = 'CONNECTED';
+                connElem.textContent = 'CONNECTED';
+                connElem.style.color = '#00ff00';
+            } else {
+                statusElem.className = 'tcp-disconnected';
+                statusElem.textContent = 'DISCONNECTED';
+                connElem.textContent = 'DISCONNECTED';
+                connElem.style.color = '#ff0000';
             }
         }
         
-        function sendEmote(emoteId, emoteName, event) {
-            if (event) event.stopPropagation();
-            
-            const team = document.getElementById('teamCode').value;
-            const target = document.getElementById('targetUid').value;
-            
-            if (!team || !target) {
-                showNotification('❌ Please enter Team Code and Target UID first!', 'error');
-                return;
-            }
-            
-            sendCommand(team, emoteId, target, emoteName);
-        }
-        
-        function sendQuickCommand() {
-            const team = document.getElementById('teamCode').value;
-            const target = document.getElementById('targetUid').value;
-            const emote = document.getElementById('emoteId').value;
-            
-            if (!team || !target || !emote) {
-                showNotification('❌ Please fill all fields!', 'error');
-                return;
-            }
-            
-            sendCommand(team, emote, target, 'Custom Emote');
-        }
-        
-        // ================= COMMAND SENDING =================
-        function sendCommand(team, emote, target, emoteName) {
-            const startTime = Date.now();
-            
-            // Validate
-            if (!/^\d{7}$/.test(team)) {
-                showNotification('❌ Team Code must be 7 digits!', 'error');
-                return;
-            }
-            
-            if (!/^\d{8,11}$/.test(target)) {
-                showNotification('❌ Target UID must be 8-11 digits!', 'error');
-                return;
-            }
-            
-            if (!/^\d{9}$/.test(emote)) {
-                showNotification('❌ Emote ID must be 9 digits!', 'error');
-                return;
-            }
-            
-            // Save user data
-            saveUserData();
-            
-            // Show sending animation
-            const sendBtn = document.querySelector('.btn-primary');
-            const originalText = sendBtn.innerHTML;
-            sendBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> SENDING...';
-            sendBtn.disabled = true;
-            
-            // Send to server
-            fetch('/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `team_code=${team}&emote_id=${emote}&target_uid=${target}`
-            })
-            .then(response => {
-                const responseTime = Date.now() - startTime;
-                document.getElementById('responseTime').textContent = `${responseTime}ms`;
-                document.getElementById('pingTime').textContent = `${responseTime}ms`;
-                return response.json();
-            })
-            .then(data => {
-                if (data.success) {
-                    commandCount++;
-                    updateStats();
-                    showNotification(`🚀 ${emoteName} sent to UID ${target}!`, 'success');
-                    loadCommandsHistory();
-                    
-                    // Emote ID रहेगा, user को फिर से डालने की जरूरत नहीं
-                    document.getElementById('emoteId').value = emote;
-                    
-                    // Optional: Auto-clear after successful send (comment out if not wanted)
-                    // document.getElementById('teamCode').value = '';
-                    // document.getElementById('targetUid').value = '';
-                } else {
-                    showNotification(`❌ Error: ${data.error}`, 'error');
-                }
-            })
-            .catch(error => {
-                showNotification('❌ Network error! Check connection.', 'error');
-            })
-            .finally(() => {
-                setTimeout(() => {
-                    sendBtn.innerHTML = originalText;
-                    sendBtn.disabled = false;
-                }, 1000);
-            });
-        }
-        
-        // ================= STATUS FUNCTIONS =================
-        function checkBotStatus() {
-            fetch('/status')
-                .then(r => r.json())
-                .then(data => {
-                    const botStatus = document.getElementById('botStatusDisplay');
-                    const footerBotStatus = document.getElementById('footerBotStatus');
-                    const mainBotStatus = document.getElementById('botStatus');
-                    
-                    if (data.bot_connected) {
-                        botStatus.innerHTML = '🟢 ONLINE';
-                        botStatus.className = 'status-value online';
-                        footerBotStatus.innerHTML = 'ONLINE';
-                        footerBotStatus.style.color = '#10b981';
-                        mainBotStatus.innerHTML = 'ONLINE';
-                        mainBotStatus.style.color = '#10b981';
-                        botConnected = true;
-                    } else {
-                        botStatus.innerHTML = '🔴 OFFLINE';
-                        botStatus.className = 'status-value offline';
-                        footerBotStatus.innerHTML = 'OFFLINE';
-                        footerBotStatus.style.color = '#ef4444';
-                        mainBotStatus.innerHTML = 'OFFLINE';
-                        mainBotStatus.style.color = '#ef4444';
-                        botConnected = false;
-                    }
-                    
-                    // Update queue count
-                    document.getElementById('queueCount').innerHTML = data.pending_commands;
-                })
-                .catch(() => {
-                    document.getElementById('botStatusDisplay').innerHTML = '❌ ERROR';
-                    document.getElementById('botStatusDisplay').className = 'status-value offline';
-                });
-        }
-        
-        function loadCommandsHistory() {
-            const historyContainer = document.getElementById('commandsHistory');
-            
-            fetch('/get_commands')
-                .then(r => r.json())
-                .then(data => {
-                    const commands = data.commands || [];
-                    
-                    if (commands.length === 0) {
-                        historyContainer.innerHTML = `
-                            <div style="text-align: center; color: var(--gray); padding: 40px;">
-                                <i class="fas fa-inbox" style="font-size: 48px; margin-bottom: 20px;"></i>
-                                <p>No commands yet. Send your first emote!</p>
-                            </div>`;
-                        return;
-                    }
-                    
-                    // Show last 10 commands
-                    const recent = commands.slice(-10).reverse();
-                    let html = '';
-                    
-                    recent.forEach(cmd => {
-                        const time = cmd.timestamp.split(' ')[1];
-                        const statusClass = cmd.status === 'executed' ? 'status-executed' : 'status-pending';
-                        const statusText = cmd.status === 'executed' ? 'EXECUTED' : 'PENDING';
-                        
-                        html += `
-                        <div class="command-item">
-                            <div class="command-header">
-                                <div class="command-id">#${cmd.id} • ${cmd.emote_name}</div>
-                                <div class="command-time">${time}</div>
-                            </div>
-                            <div class="command-details">
-                                Team: <strong style="color: var(--secondary);">${cmd.team_code}</strong> • 
-                                Target: <strong style="color: var(--accent);">${cmd.target_uid}</strong>
-                            </div>
-                            <div class="command-status ${statusClass}">${statusText}</div>
-                        </div>`;
-                    });
-                    
-                    historyContainer.innerHTML = html;
-                });
-        }
-        
-        function updateStats() {
-            document.getElementById('totalCommands').textContent = commandCount;
-            
-            // Update response time
-            const start = Date.now();
-            fetch('/status', { method: 'HEAD' })
-                .then(() => {
-                    const time = Date.now() - start;
-                    document.getElementById('responseTime').textContent = `${time}ms`;
-                });
-        }
-        
-        // ================= NOTIFICATION =================
         function showNotification(message, type = 'success') {
             const notif = document.getElementById('notification');
-            const notifMsg = document.getElementById('notification-message');
-            
-            notifMsg.textContent = message;
+            notif.textContent = message;
             notif.className = `notification ${type}`;
-            notif.style.display = 'flex';
+            notif.style.display = 'block';
             
-            // Set icon based on type
-            const icon = notif.querySelector('i');
-            if (type === 'error') {
-                icon.className = 'fas fa-exclamation-circle';
-            } else {
-                icon.className = 'fas fa-check-circle';
-            }
-            
-            // Auto hide after 4 seconds
             setTimeout(() => {
                 notif.style.display = 'none';
             }, 4000);
         }
         
-        // ================= CLEAR FORM BUTTON (Optional) =================
-        function clearForm() {
-            localStorage.removeItem('teamCode');
-            localStorage.removeItem('targetUid');
-            document.getElementById('teamCode').value = '';
-            document.getElementById('targetUid').value = '';
-            document.getElementById('emoteId').value = '';
-            showNotification('✅ Form cleared!', 'success');
+        function updateStatus() {
+            document.getElementById('count').textContent = commandCount;
         }
+        
+        function startProgress() {
+            const progressFill = document.createElement('div');
+            progressFill.className = 'progress-fill';
+            progressFill.id = 'progressFill';
+            document.querySelector('.progress-bar')?.remove();
+            
+            const progressBar = document.createElement('div');
+            progressBar.className = 'progress-bar';
+            progressBar.appendChild(progressFill);
+            
+            const evoSection = document.querySelector('.evo-section');
+            if (evoSection) {
+                evoSection.appendChild(progressBar);
+            }
+            
+            let width = 0;
+            clearInterval(progressInterval);
+            progressInterval = setInterval(() => {
+                if (width >= 100) {
+                    clearInterval(progressInterval);
+                    progressFill.style.width = '0%';
+                } else {
+                    width += 10;
+                    progressFill.style.width = width + '%';
+                }
+            }, 100);
+        }
+        
+        function selectAllEvo() {
+            if (!tcpConnected) {
+                showNotification('❌ TCP not connected! Please check bot status.', 'error');
+                return;
+            }
+            
+            const evoButtons = document.querySelectorAll('.evo-btn:not(.select-all-btn)');
+            evoButtons.forEach(btn => {
+                btn.style.background = 'linear-gradient(135deg, #ff0000, #ff00ff)';
+                btn.innerHTML = '<i class="fas fa-check"></i> ' + btn.textContent.replace('✓ ', '');
+            });
+            
+            showNotification('🎯 All EVO guns selected! Ready to fire via TCP!', 'success');
+            startProgress();
+        }
+        
+        function sendEvoEmote(emoteId, emoteName) {
+            sendEmote(emoteId, emoteName);
+        }
+        
+        function sendEmote(emoteId, emoteName) {
+            const teamCode = document.getElementById('team_code')?.value;
+            const targetUid = document.getElementById('target_uid')?.value;
+            
+            if (!teamCode || !targetUid) {
+                showNotification('❌ Please enter Team Code and Target UID first!', 'error');
+                return;
+            }
+            
+            if (!teamCode.match(/^\d{7}$/)) {
+                showNotification('❌ Team Code must be 7 digits!', 'error');
+                return;
+            }
+            
+            if (!targetUid.match(/^\d{8,11}$/)) {
+                showNotification('❌ Target UID must be 8-11 digits!', 'error');
+                return;
+            }
+            
+            showNotification(`🚀 Sending ${emoteName} to UID ${targetUid}...`, 'warning');
+            
+            fetch('/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `team_code=${teamCode}&emote_id=${emoteId}&target_uid=${targetUid}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success) {
+                    commandCount++;
+                    updateStatus();
+                    showNotification(`✅ ${emoteName} sent to UID ${targetUid}!`, 'success');
+                } else {
+                    showNotification('❌ Error: ' + data.error, 'error');
+                }
+            })
+            .catch(() => {
+                showNotification('❌ Network error', 'error');
+            });
+        }
+        
+        function sendQuickCommand() {
+            const teamCode = document.getElementById('team_code')?.value;
+            const targetUid = document.getElementById('target_uid')?.value;
+            const emoteId = '909033001'; // Default M4A1
+            
+            if (!teamCode || !targetUid) {
+                showNotification('❌ Please enter Team Code and Target UID first!', 'error');
+                return;
+            }
+            
+            if (!teamCode.match(/^\d{7}$/)) {
+                showNotification('❌ Team Code must be 7 digits!', 'error');
+                return;
+            }
+            
+            if (!targetUid.match(/^\d{8,11}$/)) {
+                showNotification('❌ Target UID must be 8-11 digits!', 'error');
+                return;
+            }
+            
+            showNotification(`🚀 Sending emote attack to UID ${targetUid}...`, 'warning');
+            
+            fetch('/send', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `team_code=${teamCode}&emote_id=${emoteId}&target_uid=${targetUid}`
+            })
+            .then(r => r.json())
+            .then(data => {
+                if(data.success) {
+                    commandCount++;
+                    updateStatus();
+                    showNotification(`✅ Emote attack sent to UID ${targetUid}!`, 'success');
+                } else {
+                    showNotification('❌ Error: ' + data.error, 'error');
+                }
+            })
+            .catch(() => {
+                showNotification('❌ Network error', 'error');
+            });
+        }
+        
+        // Initialize
+        updateStatus();
+        updateTCPStatus(true);
+        
+        // Set default values for testing
+        document.getElementById('team_code').value = '1234567';
+        document.getElementById('target_uid').value = '13706108657';
+        
+        // Animate status dot
+        setInterval(() => {
+            const dot = document.querySelector('.status-dot');
+            if (dot) {
+                dot.style.animation = 'none';
+                setTimeout(() => {
+                    dot.style.animation = 'pulse 2s infinite';
+                }, 10);
+            }
+        }, 5000);
     </script>
 </body>
 </html>
@@ -1382,23 +974,35 @@ def send_command():
         
         print(f"🚀 Command received: Team={team_code}, Emote={emote_id}, Target={target_uid}")
         
-        # Find emote category
+        # Validation
+        if not re.match(r'^\d{7}$', team_code):
+            return jsonify({"success": False, "error": "Team Code must be 7 digits"})
+        
+        if not re.match(r'^\d{8,11}$', target_uid):
+            return jsonify({"success": False, "error": "Target UID must be 8-11 digits"})
+        
+        if not re.match(r'^\d{9}$', emote_id):
+            return jsonify({"success": False, "error": "Invalid emote ID"})
+        
+        # Find emote name and category
+        emote_name = "Custom Emote"
         category = "basic"
         for cat_name, emotes in EMOTE_CATEGORIES.items():
             for emote in emotes:
                 if emote["id"] == emote_id:
+                    emote_name = emote["name"]
                     category = emote.get("rarity", "basic")
                     break
         
         user_ip = request.remote_addr
-        command_id = command_manager.save_command(team_code, emote_id, target_uid, user_ip, category=category)
+        command_id = command_manager.save_command(team_code, emote_id, target_uid, user_ip, emote_name, category)
         
         if command_id:
             return jsonify({
                 "success": True,
                 "message": f"Command #{command_id} queued for execution!",
                 "command_id": command_id,
-                "note": "Termux bot will execute within 5 seconds"
+                "note": "Command saved to bot queue"
             })
         else:
             return jsonify({"success": False, "error": "Server error"})
@@ -1436,7 +1040,11 @@ def mark_executed(command_id):
 # ==================== MAIN ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    print(f"🚀 ASHISH PREMIUM PANEL starting on port {port}")
+    print(f"🚀 ASHISH EMOTE PANEL v2.0 starting on port {port}")
     print(f"🎮 Total Emotes: {len(ALL_EMOTES)}")
-    print(f"🔥 Categories: {len(EMOTE_CATEGORIES)}")
+    print(f"🔥 EVO Guns: {len(EMOTE_CATEGORIES['EVO_GUNS'])}")
+    print(f"⭐ Special: {len(EMOTE_CATEGORIES['SPECIAL'])}")
+    print(f"🔵 Basic: {len(EMOTE_CATEGORIES['BASIC'])}")
+    print(f"👑 Legendary: {len(EMOTE_CATEGORIES['LEGENDARY'])}")
+    print("=" * 50)
     app.run(host='0.0.0.0', port=port, debug=False)
