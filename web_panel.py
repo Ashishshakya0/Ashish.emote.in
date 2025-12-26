@@ -4,16 +4,16 @@ from datetime import datetime
 import json
 import os
 import re
+import requests
 
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'ashish-premium-panel-2024')
 
-# ==================== COMPLETE EMOTE DATABASE ====================
+# ==================== UNIQUE EMOTE DATABASE ====================
 EMOTE_CATEGORIES = {
     "EVO_GUNS": [
         {"name": "🔥 EVO M4A1 MAX", "id": "909033001", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO AK47 MAX", "id": "909000063", "icon": "fa-gun", "rarity": "legendary"},
-        {"name": "🔥 EVO SHOTGUN MAX", "id": "909035007", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO SCAR MAX", "id": "909000068", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO XMB MAX", "id": "909000065", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO MP40 MAX", "id": "909000075", "icon": "fa-gun", "rarity": "legendary"},
@@ -22,7 +22,6 @@ EMOTE_CATEGORIES = {
         {"name": "🔥 EVO M10 MAX", "id": "909000081", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO FAMAS MAX", "id": "909000090", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO MP5 MAX", "id": "909033002", "icon": "fa-gun", "rarity": "epic"},
-        {"name": "🔥 EVO M1887 MAX", "id": "909035007", "icon": "fa-gun", "rarity": "legendary"},
         {"name": "🔥 EVO G18 MAX", "id": "909038012", "icon": "fa-gun", "rarity": "epic"},
         {"name": "🔥 EVO THOMPSON MAX", "id": "909038010", "icon": "fa-gun", "rarity": "epic"},
         {"name": "🔥 EVO PARAFAL MAX", "id": "909045001", "icon": "fa-gun", "rarity": "legendary"},
@@ -41,7 +40,6 @@ EMOTE_CATEGORIES = {
         {"name": "😂 LOL EMOTE", "id": "909000002", "icon": "fa-laugh", "rarity": "common"},
         {"name": "🐍 COBRA EMOTE", "id": "909000072", "icon": "fa-staff-snake", "rarity": "epic"},
         {"name": "👻 GHOST EMOTE", "id": "909036001", "icon": "fa-ghost", "rarity": "epic"},
-        {"name": "🔥 FIRE ON EMOTE", "id": "909033001", "icon": "fa-fire", "rarity": "epic"},
         {"name": "🎬 SHOLAY EMOTE", "id": "909050020", "icon": "fa-film", "rarity": "legendary"},
         {"name": "🎤 PRIME 8 EMOTE", "id": "909035013", "icon": "fa-microphone", "rarity": "epic"},
         {"name": "💪 PUSH UP", "id": "909000012", "icon": "fa-dumbbell", "rarity": "common"},
@@ -52,13 +50,11 @@ EMOTE_CATEGORIES = {
         {"name": "🕺 MICHAEL JACKSON", "id": "909045009", "icon": "fa-music", "rarity": "legendary"},
         {"name": "🔄 JUJUTSU EMOTE", "id": "909050002", "icon": "fa-yin-yang", "rarity": "mythic"},
         {"name": "💍 NEW EMOTE", "id": "909050009", "icon": "fa-ring", "rarity": "epic"},
-        {"name": "🎯 LEVEL 100", "id": "909042007", "icon": "fa-trophy", "rarity": "mythic"},
         {"name": "🐉 DRAGON'S SOUL", "id": "909000081", "icon": "fa-dragon", "rarity": "legendary"},
     ],
     
     "BASIC_EMOTES": [
         {"name": "👋 HELLO!", "id": "909000001", "icon": "fa-hand-wave", "rarity": "common"},
-        {"name": "😂 LOL", "id": "909000002", "icon": "fa-laugh", "rarity": "common"},
         {"name": "😤 PROVOKE", "id": "909000003", "icon": "fa-fist-raised", "rarity": "common"},
         {"name": "👏 APPLAUSE", "id": "909000004", "icon": "fa-hands-clapping", "rarity": "common"},
         {"name": "💃 DAB", "id": "909000005", "icon": "fa-person-dancing", "rarity": "common"},
@@ -66,22 +62,17 @@ EMOTE_CATEGORIES = {
         {"name": "👋 ARM WAVE", "id": "909000007", "icon": "fa-hand-wave", "rarity": "common"},
         {"name": "💃 SHOOT DANCE", "id": "909000008", "icon": "fa-gun", "rarity": "common"},
         {"name": "🦈 BABY SHARK", "id": "909000009", "icon": "fa-fish", "rarity": "rare"},
-        {"name": "🌹 FLOWERS OF LOVE", "id": "909000010", "icon": "fa-heart", "rarity": "rare"},
         {"name": "🧟 MUMMY DANCE", "id": "909000011", "icon": "fa-ghost", "rarity": "rare"},
-        {"name": "💪 PUSH-UP", "id": "909000012", "icon": "fa-dumbbell", "rarity": "common"},
         {"name": "🕺 SHUFFLING", "id": "909000013", "icon": "fa-person-running", "rarity": "common"},
-        {"name": "👑 FFWC THRONE", "id": "909000014", "icon": "fa-crown", "rarity": "epic"},
         {"name": "🐉 DRAGON FIST", "id": "909000015", "icon": "fa-dragon", "rarity": "epic"},
         {"name": "🎯 DANGEROUS GAME", "id": "909000016", "icon": "fa-bullseye", "rarity": "rare"},
         {"name": "🐆 JAGUAR DANCE", "id": "909000017", "icon": "fa-paw", "rarity": "rare"},
         {"name": "👊 THREATEN", "id": "909000018", "icon": "fa-hand-fist", "rarity": "common"},
         {"name": "🔄 SHAKE WITH ME", "id": "909000019", "icon": "fa-people-arrows", "rarity": "common"},
-        {"name": "😈 DEVIL'S MOVE", "id": "909000020", "icon": "fa-horn", "rarity": "epic"},
         {"name": "💥 FURIOUS SLAM", "id": "909000021", "icon": "fa-explosion", "rarity": "epic"},
         {"name": "🌙 MOON FLIP", "id": "909000022", "icon": "fa-moon", "rarity": "rare"},
         {"name": "🚶 WIGGLE WALK", "id": "909000023", "icon": "fa-walking", "rarity": "common"},
         {"name": "⚔️ BATTLE DANCE", "id": "909000024", "icon": "fa-swords", "rarity": "epic"},
-        {"name": "🤝 HIGH FIVE", "id": "909000025", "icon": "fa-handshake", "rarity": "common"},
         {"name": "🎉 SHAKE IT UP", "id": "909000026", "icon": "fa-glass-cheers", "rarity": "common"},
         {"name": "🌀 GLORIOUS SPIN", "id": "909000027", "icon": "fa-sync", "rarity": "rare"},
         {"name": "🦢 CRANE KICK", "id": "909000028", "icon": "fa-kiwi-bird", "rarity": "rare"},
@@ -89,18 +80,15 @@ EMOTE_CATEGORIES = {
         {"name": "💃 JIG DANCE", "id": "909000031", "icon": "fa-music", "rarity": "common"},
         {"name": "📸 SELFIE", "id": "909000032", "icon": "fa-camera", "rarity": "common"},
         {"name": "💫 SOUL SHAKING", "id": "909000033", "icon": "fa-star", "rarity": "rare"},
-        {"name": "🏴‍☠️ PIRATE'S FLAG", "id": "909000034", "icon": "fa-flag", "rarity": "epic"},
         {"name": "💖 HEALING DANCE", "id": "909000035", "icon": "fa-heart-pulse", "rarity": "rare"},
         {"name": "🎧 TOP DJ", "id": "909000036", "icon": "fa-headphones", "rarity": "epic"},
         {"name": "😡 DEATH GLARE", "id": "909000037", "icon": "fa-eye", "rarity": "rare"},
         {"name": "💰 POWER OF MONEY", "id": "909000038", "icon": "fa-money-bill", "rarity": "epic"},
-        {"name": "💨 EAT MY DUST", "id": "909000039", "icon": "fa-wind", "rarity": "rare"},
         {"name": "💃 BREAKDANCE", "id": "909000040", "icon": "fa-person-burst", "rarity": "epic"},
         {"name": "🥋 KUNGFU", "id": "909000041", "icon": "fa-user-ninja", "rarity": "common"},
         {"name": "🍽️ BON APPETIT", "id": "909000042", "icon": "fa-utensils", "rarity": "common"},
         {"name": "🎯 AIM; FIRE!", "id": "909000043", "icon": "fa-crosshairs", "rarity": "common"},
         {"name": "🦢 THE SWAN", "id": "909000044", "icon": "fa-dove", "rarity": "rare"},
-        {"name": "💖 I HEART YOU", "id": "909000045", "icon": "fa-heart", "rarity": "rare"},
         {"name": "☕ TEA TIME", "id": "909000046", "icon": "fa-mug-hot", "rarity": "common"},
         {"name": "🥊 BRING IT ON!", "id": "909000047", "icon": "fa-boxing-glove", "rarity": "common"},
         {"name": "🤷 WHY? OH WHY?", "id": "909000048", "icon": "fa-question", "rarity": "common"},
@@ -109,67 +97,9 @@ EMOTE_CATEGORIES = {
         {"name": "🐶 DOGGIE", "id": "909000052", "icon": "fa-dog", "rarity": "common"},
         {"name": "⚔️ CHALLENGE ON!", "id": "909000053", "icon": "fa-flag-checkered", "rarity": "common"},
         {"name": "🤠 LASSO", "id": "909000054", "icon": "fa-lasso", "rarity": "rare"},
-        {"name": "💰 I'M RICH!", "id": "909000055", "icon": "fa-money-check", "rarity": "epic"},
-    ],
-    
-    "PARTY_GAME": [
-        {"name": "🎮 PARTY GAME 5", "id": "909000100", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 6", "id": "909000101", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 3", "id": "909000102", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 4", "id": "909000103", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 7", "id": "909000104", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 1", "id": "909000105", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 8", "id": "909000106", "icon": "fa-gamepad", "rarity": "common"},
-        {"name": "🎮 PARTY GAME 2", "id": "909000107", "icon": "fa-gamepad", "rarity": "common"},
-    ],
-    
-    "GREETING": [
-        {"name": "👋 GREETING SPECIAL 1", "id": "909000108", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 2", "id": "909000109", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 3", "id": "909000110", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 4", "id": "909000111", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 5", "id": "909000112", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 6", "id": "909000113", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 7", "id": "909000114", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 8", "id": "909000115", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 9", "id": "909000116", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 10", "id": "909000117", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 11", "id": "909000118", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 12", "id": "909000119", "icon": "fa-hand", "rarity": "common"},
-        {"name": "👋 GREETING SPECIAL 13", "id": "909000120", "icon": "fa-hand", "rarity": "common"},
-    ],
-    
-    "EXTRA_SPECIAL": [
-        {"name": "🏀 DRIBBLE KING", "id": "909000121", "icon": "fa-basketball", "rarity": "epic"},
-        {"name": "🎸 FFWS 2021 GUITAR", "id": "909000122", "icon": "fa-guitar", "rarity": "legendary"},
-        {"name": "🧠 MIND IT!", "id": "909000123", "icon": "fa-brain", "rarity": "rare"},
-        {"name": "🌟 GOLDEN COMBO", "id": "909000124", "icon": "fa-star", "rarity": "epic"},
-        {"name": "🤒 SICK MOVES", "id": "909000125", "icon": "fa-head-side-virus", "rarity": "rare"},
-        {"name": "🎤 RAP SWAG", "id": "909000126", "icon": "fa-microphone", "rarity": "epic"},
-        {"name": "💃 BATTLE IN STYLE", "id": "909000127", "icon": "fa-sword", "rarity": "epic"},
-        {"name": "🏴‍☠️ RULER'S FLAG", "id": "909000128", "icon": "fa-flag", "rarity": "epic"},
-        {"name": "💸 MONEY THROW", "id": "909000129", "icon": "fa-money-bill-wave", "rarity": "epic"},
-        {"name": "🔫 ENDLESS BULLETS", "id": "909000130", "icon": "fa-gun", "rarity": "legendary"},
-        {"name": "💃 SMOOTH SWAY", "id": "909000131", "icon": "fa-music", "rarity": "rare"},
-        {"name": "🥇 NUMBER 1", "id": "909000132", "icon": "fa-trophy", "rarity": "common"},
-        {"name": "🔥 FIRE SLAM", "id": "909000133", "icon": "fa-fire", "rarity": "epic"},
-        {"name": "💔 HEARTBROKEN", "id": "909000134", "icon": "fa-heart-crack", "rarity": "rare"},
-        {"name": "✊ ROCK PAPER SCISSORS", "id": "909000135", "icon": "fa-hand", "rarity": "common"},
-        {"name": "💔 SHATTERED REALITY", "id": "909000136", "icon": "fa-shattered-glass", "rarity": "epic"},
-        {"name": "😇 HALO OF MUSIC", "id": "909000137", "icon": "fa-music", "rarity": "rare"},
-        {"name": "🍖 BURNT BBQ", "id": "909000138", "icon": "fa-drumstick-bite", "rarity": "rare"},
-        {"name": "👣 SWITCHING STEPS", "id": "909000139", "icon": "fa-shoe-prints", "rarity": "common"},
-        {"name": "⚔️ CREED SLAY", "id": "909000140", "icon": "fa-cross", "rarity": "epic"},
-        {"name": "😅 LEAP OF FAIL", "id": "909000141", "icon": "fa-face-grin-tongue", "rarity": "rare"},
-        {"name": "🎶 RHYTHM GIRL", "id": "909000142", "icon": "fa-music", "rarity": "epic"},
-        {"name": "🚁 HELICOPTER SHOT", "id": "909000143", "icon": "fa-helicopter", "rarity": "legendary"},
-        {"name": "🐅 KUNGFU TIGERS", "id": "909000144", "icon": "fa-paw", "rarity": "epic"},
-        {"name": "👹 POSSESSED WARRIOR", "id": "909000145", "icon": "fa-ghost", "rarity": "legendary"},
-        {"name": "👍 RAISE YOUR THUMB!", "id": "909000150", "icon": "fa-thumbs-up", "rarity": "common"},
     ],
     
     "FIREBORN_SERIES": [
-        {"name": "🔥 FIREBORN", "id": "909033001", "icon": "fa-fire", "rarity": "legendary"},
         {"name": "🪶 GOLDEN FEATHER", "id": "909033002", "icon": "fa-feather", "rarity": "epic"},
         {"name": "💃 COME AND DANCE", "id": "909033003", "icon": "fa-music", "rarity": "rare"},
         {"name": "🦵 DROP KICK", "id": "909033004", "icon": "fa-shoe-prints", "rarity": "epic"},
@@ -182,13 +112,11 @@ EMOTE_CATEGORIES = {
     ],
     
     "NINJA_SERIES": [
-        {"name": "🔄 REANIMATION JUTSU", "id": "909050002", "icon": "fa-yin-yang", "rarity": "mythic"},
         {"name": "⚔️ THE FINAL BATTLE", "id": "909050003", "icon": "fa-sword", "rarity": "mythic"},
         {"name": "👆 FOREHEAD POKE", "id": "909050004", "icon": "fa-hand-point-up", "rarity": "epic"},
         {"name": "🔥 FIREBALL JUTSU", "id": "909050005", "icon": "fa-fire", "rarity": "mythic"},
         {"name": "⚡ FLYING RAIJIN", "id": "909050006", "icon": "fa-bolt", "rarity": "mythic"},
         {"name": "🔨 HAMMER SLAM", "id": "909050008", "icon": "fa-hammer", "rarity": "epic"},
-        {"name": "💍 THE RINGS", "id": "909050009", "icon": "fa-ring", "rarity": "epic"},
         {"name": "🥁 DRUM TWIRL", "id": "909050010", "icon": "fa-drum", "rarity": "rare"},
         {"name": "🐇 BUNNY ACTION", "id": "909050011", "icon": "fa-rabbit", "rarity": "rare"},
         {"name": "🧹 BROOM SWOOSH", "id": "909050012", "icon": "fa-broom", "rarity": "common"},
@@ -199,13 +127,11 @@ EMOTE_CATEGORIES = {
         {"name": "🐇 BUNNY WIGGLE", "id": "909050017", "icon": "fa-rabbit", "rarity": "rare"},
         {"name": "❤️‍🔥 FLAMING HEART", "id": "909050018", "icon": "fa-heart", "rarity": "epic"},
         {"name": "☔ RAIN OR SHINE", "id": "909050019", "icon": "fa-cloud-sun-rain", "rarity": "rare"},
-        {"name": "🎬 SHOLAY", "id": "909050020", "icon": "fa-film", "rarity": "legendary"},
         {"name": "⛰️ PEAK POINTS", "id": "909050021", "icon": "fa-mountain", "rarity": "epic"},
     ],
     
     "LEGENDARY": [
         {"name": "🐉 DRAGON SLAYER", "id": "909050001", "icon": "fa-dragon", "rarity": "mythic"},
-        {"name": "🔥 PHOENIX RISE", "id": "909050002", "icon": "fa-fire", "rarity": "mythic"},
         {"name": "👹 TITAN SMASH", "id": "909050003", "icon": "fa-fist-raised", "rarity": "mythic"},
         {"name": "👼 VALKYRIE WINGS", "id": "909050004", "icon": "fa-dove", "rarity": "mythic"},
         {"name": "🗡️ SAMURAI STRIKE", "id": "909050005", "icon": "fa-sword", "rarity": "mythic"},
@@ -219,7 +145,6 @@ EMOTE_CATEGORIES = {
     "MORE_PRACTICE": [
         {"name": "🎯 MORE PRACTICE", "id": "909000079", "icon": "fa-bullseye", "rarity": "rare"},
         {"name": "🏆 FFWS 2021", "id": "909000080", "icon": "fa-trophy", "rarity": "legendary"},
-        {"name": "🐉 DRACO'S SOUL", "id": "909000081", "icon": "fa-dragon", "rarity": "mythic"},
         {"name": "👍 GOOD GAME", "id": "909000082", "icon": "fa-thumbs-up", "rarity": "rare"},
         {"name": "👋 GREETINGS", "id": "909000083", "icon": "fa-hand-peace", "rarity": "rare"},
         {"name": "🚶 THE WALKER", "id": "909000084", "icon": "fa-walking", "rarity": "epic"},
@@ -241,12 +166,21 @@ EMOTE_CATEGORIES = {
     ],
 }
 
-# Combine all emotes
+# Combine all emotes and remove duplicates
 ALL_EMOTES = []
-for category in EMOTE_CATEGORIES.values():
-    ALL_EMOTES.extend(category)
+seen_ids = set()
 
-print(f"✅ Total Emotes Loaded: {len(ALL_EMOTES)}")
+for category in EMOTE_CATEGORIES.values():
+    for emote in category:
+        if emote["id"] not in seen_ids:
+            ALL_EMOTES.append(emote)
+            seen_ids.add(emote["id"])
+
+print(f"✅ Total Unique Emotes Loaded: {len(ALL_EMOTES)}")
+
+# ==================== API CONFIGURATION ====================
+API_URL = "https://proapi.sumittools.shop/emote"
+API_KEY = "ShadowProTCP"
 
 # ==================== IN-MEMORY STORAGE ====================
 command_storage = {
@@ -267,7 +201,7 @@ class CommandManager:
     def __init__(self):
         self.storage = command_storage
     
-    def save_command(self, team_code, emote_id, target_uid, user_ip, emote_name="", category="basic"):
+    def save_command(self, team_code, emote_id, target_uid, user_ip, emote_name="", category="basic", region="IND"):
         try:
             command_id = self.storage["last_id"] + 1
             timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -285,6 +219,7 @@ class CommandManager:
                 "emote_id": emote_id,
                 "emote_name": emote_name,
                 "target_uid": target_uid,
+                "region": region,
                 "timestamp": timestamp,
                 "user_ip": user_ip,
                 "status": "pending",
@@ -297,73 +232,117 @@ class CommandManager:
             self.storage["stats"]["total"] += 1
             self.storage["stats"][category] = self.storage["stats"].get(category, 0) + 1
             
-            print(f"✅ Command #{command_id} saved: {emote_name}")
+            print(f"✅ Command #{command_id} saved: {emote_name} (Region: {region})")
             return command_id
             
         except Exception as e:
             print(f"❌ Save error: {e}")
             return None
 
+    def send_to_api(self, team_code, emote_id, target_uids, region="IND"):
+        """
+        API को भेजने का function
+        """
+        try:
+            # UIDs को अलग करें
+            uid_list = target_uids.split(',')
+            uid_list = [uid.strip() for uid in uid_list if uid.strip()]
+            
+            # API parameters
+            params = {
+                "key": API_KEY,
+                "region": region,
+                "tc": team_code,
+                "emote_id": emote_id
+            }
+            
+            # Add UIDs (up to 6)
+            for i, uid in enumerate(uid_list[:6]):
+                params[f"uid{i+1}"] = uid
+            
+            print(f"📡 Sending to API: {params}")
+            
+            # Send request to API
+            response = requests.get(API_URL, params=params, timeout=10)
+            
+            print(f"📥 API Response: {response.status_code}, {response.text}")
+            
+            if response.status_code == 200:
+                try:
+                    data = response.json()
+                    return data
+                except:
+                    return {"success": True, "message": response.text}
+            else:
+                return {"success": False, "error": f"API Error: {response.status_code}"}
+                
+        except Exception as e:
+            print(f"❌ API Error: {e}")
+            return {"success": False, "error": str(e)}
+
 command_manager = CommandManager()
 
-# ==================== HTML TEMPLATE (MAIN.PY UI) ====================
+# ==================== DARK BLUE WITH RED OUTLINE THEME ====================
 HTML_TEMPLATE = '''
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>🔥 ASHISH EMOTE PANEL v2.0</title>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌌 ASHISH EMOTE PANEL v8.0</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         :root {
-            --primary: #ff0000;
-            --secondary: #00ff00;
-            --accent: #00ffff;
-            --dark: #0a0a0a;
-            --darker: #050505;
-            --gradient: linear-gradient(135deg, #ff0000 0%, #ff00ff 50%, #00ffff 100%);
-            --card-bg: rgba(20, 20, 20, 0.7);
-            --glass: rgba(255, 255, 255, 0.05);
+            --deep-blue: #0a192f;
+            --navy-blue: #112240;
+            --royal-blue: #233554;
+            --electric-blue: #00b4d8;
+            --cyan: #00e5ff;
+            --blood-red: #8B0000;
+            --crimson: #dc143c;
+            --dark-red: #660000;
+            --light-gray: #ccd6f6;
+            --slate-gray: #8892b0;
+            --gold: #FFD700;
+            --shadow: 0 10px 30px rgba(0, 100, 255, 0.2);
+            --shadow-hover: 0 20px 50px rgba(220, 20, 60, 0.3);
         }
 
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            font-family: 'Segoe UI', 'Roboto', sans-serif;
         }
 
         body {
-            background: var(--dark);
-            color: #fff;
+            background: linear-gradient(135deg, var(--deep-blue) 0%, var(--navy-blue) 100%);
+            color: var(--light-gray);
             min-height: 100vh;
-            height: 100vh;
-            overflow-y: auto;
-            background-image: 
-                radial-gradient(circle at 10% 20%, rgba(255, 0, 0, 0.05) 0%, transparent 20%),
-                radial-gradient(circle at 90% 80%, rgba(0, 255, 255, 0.05) 0%, transparent 20%);
             overflow-x: hidden;
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(0, 180, 216, 0.1) 0%, transparent 40%),
+                radial-gradient(circle at 90% 80%, rgba(139, 0, 0, 0.1) 0%, transparent 40%);
         }
 
         .container {
-            max-width: 1100px;
-            margin: 20px auto;
+            max-width: 1400px;
+            margin: 0 auto;
             padding: 20px;
-            padding-bottom: 100px !important; 
-            min-height: 120vh; 
+            padding-bottom: 50px;
         }
 
+        /* ===== NEBULA HEADER ===== */
         .header {
             text-align: center;
-            margin-bottom: 30px;
-            padding: 20px;
-            background: rgba(0, 0, 0, 0.7);
-            border-radius: 20px;
-            border: 1px solid rgba(255, 0, 0, 0.3);
-            box-shadow: 0 10px 30px rgba(255, 0, 0, 0.2),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            margin-bottom: 40px;
+            padding: 40px;
+            background: var(--navy-blue);
+            border-radius: 25px;
+            border: 3px solid var(--blood-red);
             position: relative;
             overflow: hidden;
+            box-shadow: var(--shadow);
         }
 
         .header::before {
@@ -371,113 +350,346 @@ HTML_TEMPLATE = '''
             position: absolute;
             top: -50%;
             left: -50%;
-            width: 200%;
-            height: 200%;
-            background: var(--gradient);
-            opacity: 0.1;
-            animation: rotate 20s linear infinite;
+            right: -50%;
+            bottom: -50%;
+            background: 
+                radial-gradient(circle at 30% 30%, rgba(0, 180, 216, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 70% 70%, rgba(220, 20, 60, 0.1) 0%, transparent 50%);
+            animation: float 20s infinite linear;
+            z-index: 1;
         }
 
-        @keyframes rotate {
+        @keyframes float {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+
         .header h1 {
-            font-size: 3rem;
-            background: var(--gradient);
+            font-size: 3.5rem;
+            background: linear-gradient(45deg, var(--electric-blue), var(--cyan));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
-            text-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
-            position: relative;
+            margin-bottom: 20px;
+            text-shadow: 0 0 20px rgba(0, 180, 216, 0.3);
             letter-spacing: 2px;
         }
 
         .header h2 {
-            color: var(--accent);
-            font-size: 1.2rem;
-            opacity: 0.9;
+            color: var(--light-gray);
+            font-size: 1.4rem;
             font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+        }
+
+        .accent-text {
+            background: linear-gradient(45deg, var(--cyan), var(--electric-blue));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-weight: bold;
+        }
+
+        .header p {
+            color: var(--slate-gray);
+            font-size: 1.1rem;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            padding: 20px;
+            background: rgba(17, 34, 64, 0.7);
+            border-radius: 15px;
+            border: 1px solid var(--blood-red);
+        }
+
+        /* ===== CONTROL PANEL ===== */
+        .control-panel {
+            background: var(--navy-blue);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 3px solid var(--blood-red);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .control-panel::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--blood-red), var(--crimson), var(--blood-red));
+        }
+
+        .section-title {
+            color: var(--cyan);
+            font-size: 1.8rem;
+            margin-bottom: 25px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--blood-red);
+        }
+
+        .section-title i {
+            color: var(--cyan);
+            font-size: 1.8rem;
+        }
+
+        /* ===== SERVER SELECT ===== */
+        .server-select {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .server-btn {
+            flex: 1;
+            min-width: 200px;
+            padding: 20px;
+            background: var(--royal-blue);
+            border: 2px solid var(--blood-red);
+            border-radius: 15px;
+            color: var(--light-gray);
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            text-align: center;
+        }
+
+        .server-btn:hover {
+            background: rgba(139, 0, 0, 0.2);
+            border-color: var(--cyan);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(220, 20, 60, 0.2);
+        }
+
+        .server-btn.active {
+            background: linear-gradient(135deg, rgba(0, 180, 216, 0.2), rgba(139, 0, 0, 0.2));
+            border-color: var(--cyan);
+            color: white;
+            box-shadow: 0 10px 20px rgba(0, 180, 216, 0.2);
+        }
+
+        /* ===== INPUT GROUPS ===== */
+        .input-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .input-group {
             position: relative;
         }
 
-        .section {
-            background: var(--card-bg);
-            backdrop-filter: blur(10px);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }
-
-        .section:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 15px 35px rgba(255, 0, 0, 0.2);
-        }
-
-        .section h3 {
-            color: var(--secondary);
-            margin-bottom: 20px;
-            font-size: 1.5rem;
+        .input-group label {
+            display: block;
+            margin-bottom: 10px;
+            color: var(--cyan);
+            font-weight: 600;
+            font-size: 1.1rem;
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .section h3 i {
-            color: var(--accent);
-        }
-
-        .input-group {
-            margin-bottom: 20px;
-        }
-
-        .input-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--accent);
-            font-weight: 600;
-            font-size: 1.1rem;
+        .input-group label i {
+            color: var(--crimson);
+            font-size: 1.2rem;
         }
 
         .input-group input {
             width: 100%;
-            padding: 15px;
-            background: rgba(0, 0, 0, 0.5);
-            border: 2px solid var(--primary);
-            border-radius: 10px;
+            padding: 18px 20px;
+            background: var(--royal-blue);
+            border: 2px solid var(--blood-red);
+            border-radius: 15px;
             color: white;
-            font-size: 16px;
+            font-size: 1rem;
             transition: all 0.3s ease;
+            outline: none;
         }
 
         .input-group input:focus {
-            outline: none;
-            border-color: var(--accent);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+            border-color: var(--cyan);
+            box-shadow: 0 0 0 3px rgba(0, 180, 216, 0.1);
+            background: rgba(35, 53, 84, 0.9);
         }
 
-        .btn {
-            background: var(--gradient);
-            color: white;
-            border: none;
-            padding: 18px;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: bold;
-            cursor: pointer;
-            width: 100%;
-            margin: 20px 0;
-            transition: all 0.3s ease;
-            letter-spacing: 1px;
+        .input-group input::placeholder {
+            color: rgba(204, 214, 246, 0.5);
+        }
+
+        /* ===== UID CONTAINER ===== */
+        .uid-container {
+            background: var(--royal-blue);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border: 2px solid var(--blood-red);
             position: relative;
             overflow: hidden;
         }
 
-        .btn::before {
+        .uid-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--blood-red), var(--crimson), var(--blood-red));
+        }
+
+        .uid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .uid-header h3 {
+            color: var(--cyan);
+            font-size: 1.3rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .uid-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .uid-action-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--blood-red), var(--crimson));
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .uid-action-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 20px rgba(220, 20, 60, 0.3);
+            background: linear-gradient(135deg, var(--crimson), var(--blood-red));
+        }
+
+        .uid-action-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .uid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 15px;
+        }
+
+        .uid-input {
+            position: relative;
+        }
+
+        .uid-input input {
+            width: 100%;
+            padding: 15px;
+            background: var(--navy-blue);
+            border: 2px solid var(--blood-red);
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+        }
+
+        .uid-input input:focus {
+            border-color: var(--cyan);
+            background: rgba(17, 34, 64, 0.9);
+        }
+
+        .uid-input input.valid {
+            border-color: #00ff99;
+            background: rgba(0, 255, 153, 0.1);
+        }
+
+        .uid-input input.invalid {
+            border-color: #ff3366;
+            background: rgba(255, 51, 102, 0.1);
+        }
+
+        .uid-input label {
+            position: absolute;
+            top: -10px;
+            left: 10px;
+            background: var(--navy-blue);
+            padding: 0 8px;
+            color: var(--cyan);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        /* ===== SEND BUTTON ===== */
+        .send-section {
+            text-align: center;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid var(--blood-red);
+        }
+
+        .send-btn {
+            padding: 20px 50px;
+            background: linear-gradient(45deg, var(--blood-red), var(--crimson), var(--blood-red));
+            border: none;
+            border-radius: 15px;
+            color: white;
+            font-size: 1.3rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .send-btn:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(220, 20, 60, 0.4);
+            background: linear-gradient(45deg, var(--crimson), var(--blood-red), var(--crimson));
+        }
+
+        .send-btn:active {
+            transform: translateY(-2px);
+        }
+
+        .send-btn::before {
             content: '';
             position: absolute;
             top: 0;
@@ -488,91 +700,54 @@ HTML_TEMPLATE = '''
             transition: 0.5s;
         }
 
-        .btn:hover::before {
+        .send-btn:hover::before {
             left: 100%;
         }
 
-        .btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 25px rgba(255, 0, 0, 0.4);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        /* EVO GUN SECTION */
-        .evo-section {
-            background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(0, 0, 0, 0.8));
-            border: 2px solid var(--primary);
-        }
-
-        .evo-buttons {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-            gap: 15px;
-            margin-top: 20px;
-        }
-
-        .evo-btn {
-            background: linear-gradient(135deg, #ff0000, #ff5500);
-            color: white;
-            border: none;
-            padding: 15px;
-            border-radius: 10px;
-            cursor: pointer;
-            font-weight: bold;
-            transition: all 0.3s ease;
-            text-align: center;
+        /* ===== EMOTE SECTIONS ===== */
+        .emote-section {
+            background: var(--navy-blue);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 3px solid var(--blood-red);
+            box-shadow: var(--shadow);
             position: relative;
             overflow: hidden;
         }
 
-        .evo-btn::after {
+        .emote-section::before {
             content: '';
             position: absolute;
             top: 0;
             left: 0;
             right: 0;
-            bottom: 0;
-            background: linear-gradient(135deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-            opacity: 0;
-            transition: opacity 0.3s;
+            height: 4px;
+            background: linear-gradient(90deg, var(--blood-red), var(--crimson), var(--blood-red));
         }
 
-        .evo-btn:hover::after {
-            opacity: 1;
-        }
-
-        .evo-btn:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 20px rgba(255, 0, 0, 0.3);
-        }
-
-        .select-all-btn {
-            background: linear-gradient(135deg, #00ff00, #00cc00);
-            grid-column: 1 / -1;
-            padding: 20px;
-            font-size: 1.2rem;
-            margin-top: 10px;
-        }
-
-        /* Emotes Grid */
         .emotes-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 20px;
             margin-top: 20px;
         }
 
         .emote-card {
-            background: rgba(30, 30, 30, 0.8);
-            border-radius: 12px;
+            background: linear-gradient(135deg, var(--royal-blue), var(--navy-blue));
+            border-radius: 15px;
             padding: 20px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 2px solid var(--blood-red);
             transition: all 0.3s ease;
+            cursor: pointer;
             position: relative;
             overflow: hidden;
+        }
+
+        .emote-card:hover {
+            border-color: var(--cyan);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 30px rgba(0, 180, 216, 0.3);
         }
 
         .emote-card::before {
@@ -582,559 +757,902 @@ HTML_TEMPLATE = '''
             left: 0;
             right: 0;
             height: 3px;
-            background: var(--gradient);
-            opacity: 0;
-            transition: opacity 0.3s;
+            background: linear-gradient(90deg, var(--blood-red), var(--crimson), var(--blood-red));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.3s ease;
         }
 
         .emote-card:hover::before {
-            opacity: 1;
+            transform: scaleX(1);
         }
 
-        .emote-card:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
-            border-color: var(--primary);
+        .emote-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+
+        .emote-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, var(--blood-red), var(--crimson));
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: white;
         }
 
         .emote-name {
-            color: #ffcc00;
-            font-size: 1.3rem;
-            margin-bottom: 10px;
+            color: var(--light-gray);
+            font-size: 1.2rem;
             font-weight: 600;
+            line-height: 1.3;
         }
 
         .emote-id {
-            color: var(--accent);
-            background: rgba(0, 0, 0, 0.5);
+            background: var(--navy-blue);
             padding: 8px 12px;
-            border-radius: 6px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            color: var(--cyan);
+            margin-bottom: 10px;
+            display: inline-block;
+            border: 1px solid var(--blood-red);
+        }
+
+        .emote-rarity {
+            display: inline-block;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
             margin-bottom: 15px;
-            font-family: monospace;
+            color: white;
+        }
+
+        .rarity-legendary { background: linear-gradient(135deg, var(--gold), #ff9500); }
+        .rarity-mythic { background: linear-gradient(135deg, #ff00ff, #9d00ff); }
+        .rarity-epic { background: linear-gradient(135deg, #c770ff, #8a2be2); }
+        .rarity-rare { background: linear-gradient(135deg, #00bfff, #0066cc); }
+        .rarity-common { background: linear-gradient(135deg, #8892b0, #495670); }
+
+        .emote-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .emote-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
             font-size: 0.9rem;
         }
 
-        .send-btn {
-            background: linear-gradient(135deg, #00ff00, #00cc00);
-            color: #000;
-            border: none;
-            padding: 12px;
-            border-radius: 8px;
-            cursor: pointer;
-            width: 100%;
-            font-weight: bold;
-            transition: all 0.3s ease;
+        .emote-btn-send {
+            background: linear-gradient(135deg, var(--blood-red), var(--crimson));
+            color: white;
         }
 
-        .send-btn:hover {
-            background: linear-gradient(135deg, #00ff88, #00ff00);
-            transform: translateY(-2px);
-            box-shadow: 0 5px 15px rgba(0, 255, 0, 0.3);
+        .emote-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
         }
 
-        /* Status Bar */
+        /* ===== COMPACT STATUS BAR ===== */
         .status-bar {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: rgba(10, 10, 10, 0.95);
-            padding: 15px 20px;
+            background: rgba(10, 25, 47, 0.95);
+            padding: 8px 20px;
             display: flex;
-            justify-content: space-between;
+            justify-content: space-around;
             align-items: center;
-            border-top: 2px solid var(--primary);
-            backdrop-filter: blur(10px);
+            border-top: 3px solid var(--blood-red);
             z-index: 1000;
+            height: 40px;
         }
 
         .status-item {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
+            padding: 0 10px;
         }
 
-        .status-dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: #00ff00;
-            animation: pulse 2s infinite;
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        /* Notification */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            padding: 20px;
-            border-radius: 10px;
-            display: none;
-            font-weight: bold;
-            z-index: 2000;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            animation: slideIn 0.3s ease;
-            max-width: 400px;
-        }
-
-        @keyframes slideIn {
-            from { transform: translateX(100%); opacity: 0; }
-            to { transform: translateX(0); opacity: 1; }
-        }
-
-        .notification.success {
-            background: linear-gradient(135deg, rgba(0, 255, 0, 0.9), rgba(0, 200, 0, 0.9));
-            color: #000;
-        }
-
-        .notification.error {
-            background: linear-gradient(135deg, rgba(255, 0, 0, 0.9), rgba(200, 0, 0, 0.9));
+        .status-icon {
+            width: 24px;
+            height: 24px;
+            background: linear-gradient(135deg, var(--blood-red), var(--crimson));
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
             color: white;
         }
 
-        .notification.warning {
-            background: linear-gradient(135deg, rgba(255, 255, 0, 0.9), rgba(200, 200, 0, 0.9));
-            color: #000;
+        .status-info {
+            display: flex;
+            flex-direction: column;
         }
 
-        /* Progress Bar */
-        .progress-bar {
-            width: 100%;
-            height: 4px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-top: 10px;
+        .status-label {
+            color: var(--slate-gray);
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .progress-fill {
-            height: 100%;
-            background: var(--gradient);
-            width: 0%;
-            transition: width 0.3s ease;
+        .status-value {
+            color: var(--cyan);
+            font-weight: 700;
+            font-size: 0.85rem;
         }
 
-        /* TCP Status */
-        .tcp-status {
+        /* ===== NOTIFICATIONS ===== */
+        .notification-container {
             position: fixed;
             top: 20px;
-            left: 20px;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 10px 15px;
-            border-radius: 10px;
-            border: 2px solid var(--primary);
-            z-index: 1000;
-            backdrop-filter: blur(5px);
+            right: 20px;
+            z-index: 2000;
+            max-width: 350px;
         }
 
-        .tcp-connected {
-            color: #00ff00;
-            font-weight: bold;
+        .notification {
+            background: var(--navy-blue);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-left: 4px solid var(--blood-red);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
+            animation: slideIn 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            backdrop-filter: blur(10px);
         }
 
-        .tcp-disconnected {
-            color: #ff0000;
-            font-weight: bold;
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateX(100%);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
         }
 
-        /* Responsive */
-        @media (max-width: 768px) {
+        .notification-icon {
+            width: 32px;
+            height: 32px;
+            background: linear-gradient(135deg, var(--blood-red), var(--crimson));
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            color: white;
+            flex-shrink: 0;
+        }
+
+        .notification-content {
+            flex: 1;
+        }
+
+        .notification-title {
+            color: var(--cyan);
+            font-weight: 700;
+            font-size: 0.95rem;
+            margin-bottom: 5px;
+        }
+
+        .notification-message {
+            color: var(--slate-gray);
+            font-size: 0.9rem;
+            line-height: 1.4;
+        }
+
+        /* ===== LOADING ===== */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(10, 25, 47, 0.95);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .loading-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .loading-spinner {
+            width: 60px;
+            height: 60px;
+            border: 4px solid rgba(139, 0, 0, 0.1);
+            border-top: 4px solid var(--cyan);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            color: var(--cyan);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 1200px) {
             .container {
-                padding: 10px;
-                margin: 10px;
+                padding: 15px;
+                padding-bottom: 45px;
+            }
+            
+            .emotes-grid {
+                grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            }
+            
+            .header h1 {
+                font-size: 2.8rem;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header {
+                padding: 25px 15px;
             }
             
             .header h1 {
                 font-size: 2rem;
             }
             
+            .header h2 {
+                font-size: 1.1rem;
+            }
+            
+            .section-title {
+                font-size: 1.5rem;
+            }
+            
             .emotes-grid {
                 grid-template-columns: 1fr;
             }
             
-            .evo-buttons {
+            .input-row {
                 grid-template-columns: 1fr;
             }
             
-            .status-bar {
-                flex-direction: column;
-                gap: 10px;
-                padding: 10px;
-                text-align: center;
+            .uid-inputs {
+                grid-template-columns: 1fr;
             }
             
-            .tcp-status {
-                position: relative;
-                top: 0;
-                left: 0;
-                margin-bottom: 20px;
-                width: 100%;
+            .server-select {
+                flex-direction: column;
             }
+            
+            .server-btn {
+                min-width: 100%;
+            }
+            
+            .status-bar {
+                padding: 6px 10px;
+                height: 38px;
+                font-size: 0.8rem;
+            }
+            
+            .status-item {
+                padding: 0 5px;
+            }
+            
+            .status-icon {
+                width: 20px;
+                height: 20px;
+                font-size: 0.8rem;
+            }
+            
+            .status-label {
+                font-size: 0.6rem;
+            }
+            
+            .status-value {
+                font-size: 0.75rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .container {
+                padding: 10px;
+                padding-bottom: 40px;
+            }
+            
+            .control-panel,
+            .emote-section {
+                padding: 20px;
+            }
+            
+            .header h1 {
+                font-size: 1.6rem;
+            }
+            
+            .send-btn {
+                padding: 15px 30px;
+                font-size: 1.1rem;
+            }
+            
+            .status-bar {
+                flex-wrap: wrap;
+                height: auto;
+                padding: 5px;
+            }
+            
+            .status-item {
+                flex: 1 0 45%;
+                margin: 2px;
+                justify-content: center;
+            }
+        }
+
+        /* ===== CUSTOM SCROLLBAR ===== */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--navy-blue);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(var(--blood-red), var(--crimson));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(var(--crimson), var(--blood-red));
         }
     </style>
 </head>
 <body>
-    <div class="tcp-status" id="tcpStatus">
-        <i class="fas fa-plug"></i> TCP: <span class="tcp-connected" id="tcpConnStatus">CONNECTING...</span>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <div class="loading-text">SENDING EMOTE...</div>
     </div>
-    
+
+    <!-- Notifications -->
+    <div class="notification-container" id="notificationContainer"></div>
+
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-fire"></i> ASHISH EMOTE PANEL v3.0</h1>
-            <h2>Premium Emote Sending System | {{ total_emotes }} Emotes Available</h2>
-        </div>
-        
-        <div class="section">
-            <h3><i class="fas fa-users"></i> TEAM INFORMATION</h3>
+        <!-- Nebula Header -->
+        <header class="header">
+            <div class="header-content">
+                <h1><i class="fas fa-meteor"></i> ASHISH EMOTE PANEL v8.0</h1>
+                <h2><span class="accent-text">IND | BD SERVER</span> • MAX 6 UIDs • {{ total_emotes }} UNIQUE EMOTES</h2>
+                <p>Professional emote sending panel with dark blue theme and red outline accents</p>
+            </div>
+        </header>
+
+        <!-- Control Panel -->
+        <section class="control-panel">
+            <h2 class="section-title"><i class="fas fa-sliders-h"></i> CONTROL CENTER</h2>
+            
+            <!-- Server Selection -->
+            <div class="server-select">
+                <button class="server-btn active" id="serverIND" onclick="selectServer('IND')">
+                    <i class="fas fa-flag"></i> INDIA SERVER
+                </button>
+                <button class="server-btn" id="serverBD" onclick="selectServer('BD')">
+                    <i class="fas fa-flag"></i> BANGLADESH SERVER
+                </button>
+            </div>
+
+            <!-- Team Code -->
             <div class="input-group">
-                <label>TEAM CODE (7 digits)</label>
+                <label><i class="fas fa-users"></i> TEAM CODE (7 DIGITS)</label>
                 <input type="text" id="team_code" placeholder="Enter 7-digit team code" 
                        pattern="[0-9]{7}" title="7 digit team code" value="1234567">
             </div>
-            
-            <h3><i class="fas fa-user"></i> TARGET PLAYER UID</h3>
-            <div class="input-group">
-                <label>TARGET UID (Required)</label>
-                <input type="text" id="target_uid" placeholder="Enter target UID (8-11 digits)" 
-                       pattern="[0-9]{8,11}" title="8-11 digits" value="13706108657">
+
+            <!-- UID Container -->
+            <div class="uid-container">
+                <div class="uid-header">
+                    <h3><i class="fas fa-user-friends"></i> PLAYER UIDs (MAX 6)</h3>
+                    <div class="uid-actions">
+                        <button class="uid-action-btn" id="addUidBtn" onclick="addUidField()">
+                            <i class="fas fa-plus"></i> ADD UID
+                        </button>
+                        <button class="uid-action-btn" onclick="clearAllUids()">
+                            <i class="fas fa-trash"></i> CLEAR
+                        </button>
+                    </div>
+                </div>
+                <div class="uid-inputs" id="uidContainer">
+                    <!-- UID fields will be added here -->
+                </div>
             </div>
-            
-            <button type="button" class="btn" onclick="sendQuickCommand()">
-                <i class="fas fa-bolt"></i> SEND EMOTE ATTACK
-            </button>
-        </div>
-        
-        <!-- EVO GUN SECTION -->
-        <div class="section evo-section">
-            <h3><i class="fas fa-gun"></i> 🎯 EVO GUN EMOTES ({{ evo_count }})</h3>
-            <p style="color: #aaa; margin-bottom: 15px;">Select EVO gun emotes to send instantly via TCP</p>
-            
-            <div class="evo-buttons">
-                <button type="button" class="evo-btn select-all-btn" onclick="selectAllEvo()">
-                    <i class="fas fa-check-double"></i> SELECT ALL EVO GUNS
+
+            <!-- Send Button -->
+            <div class="send-section">
+                <button class="send-btn" onclick="sendSelectedEmote()">
+                    <i class="fas fa-paper-plane"></i> SEND EMOTE
                 </button>
-                
+            </div>
+        </section>
+
+        <!-- EVO Guns Section -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-gun"></i> EVO GUN EMOTES</h2>
+            <div class="emotes-grid">
                 {% for emote in evo_emotes %}
-                <button type="button" class="evo-btn" onclick="sendEvoEmote('{{ emote.id }}', '{{ emote.name }}')">
-                    <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
-                </button>
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
+                    </div>
+                    <div class="emote-id">ID: {{ emote.id }}</div>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
+                </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- SPECIAL EMOTES SECTION -->
-        <div class="section" style="background: linear-gradient(135deg, rgba(0, 255, 255, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #00ffff;">
-            <h3><i class="fas fa-star"></i> SPECIAL & POPULAR EMOTES ({{ special_count }})</h3>
+        <!-- Special Emotes -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-star"></i> SPECIAL EMOTES</h2>
             <div class="emotes-grid">
                 {% for emote in special_emotes %}
-                <div class="emote-card">
-                    <div class="emote-name">
-                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
                     </div>
                     <div class="emote-id">ID: {{ emote.id }}</div>
-                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
-                        <i class="fas fa-paper-plane"></i> SEND EMOTE
-                    </button>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- BASIC EMOTES SECTION -->
-        <div class="section" style="background: linear-gradient(135deg, rgba(157, 78, 221, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #9d4edd;">
-            <h3><i class="fas fa-gamepad"></i> BASIC EMOTES ({{ basic_count }})</h3>
+        <!-- Basic Emotes -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-gamepad"></i> BASIC EMOTES</h2>
             <div class="emotes-grid">
                 {% for emote in basic_emotes %}
-                <div class="emote-card">
-                    <div class="emote-name">
-                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
                     </div>
                     <div class="emote-id">ID: {{ emote.id }}</div>
-                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
-                        <i class="fas fa-paper-plane"></i> SEND EMOTE
-                    </button>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- MORE PRACTICE SECTION -->
-        <div class="section" style="background: linear-gradient(135deg, rgba(255, 140, 0, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #ff8c00;">
-            <h3><i class="fas fa-trophy"></i> MORE PRACTICE SERIES ({{ more_practice_count }})</h3>
+        <!-- More Practice -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-trophy"></i> MORE PRACTICE</h2>
             <div class="emotes-grid">
                 {% for emote in more_practice_emotes %}
-                <div class="emote-card">
-                    <div class="emote-name">
-                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
                     </div>
                     <div class="emote-id">ID: {{ emote.id }}</div>
-                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
-                        <i class="fas fa-paper-plane"></i> SEND EMOTE
-                    </button>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- FIREBORN SERIES -->
-        <div class="section" style="background: linear-gradient(135deg, rgba(255, 69, 0, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #ff4500;">
-            <h3><i class="fas fa-fire"></i> FIREBORN SERIES ({{ fireborn_count }})</h3>
+        <!-- Fireborn Series -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-fire"></i> FIREBORN SERIES</h2>
             <div class="emotes-grid">
                 {% for emote in fireborn_emotes %}
-                <div class="emote-card">
-                    <div class="emote-name">
-                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
                     </div>
                     <div class="emote-id">ID: {{ emote.id }}</div>
-                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
-                        <i class="fas fa-paper-plane"></i> SEND EMOTE
-                    </button>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
 
-        <!-- NINJA SERIES -->
-        <div class="section" style="background: linear-gradient(135deg, rgba(128, 0, 128, 0.1), rgba(0, 0, 0, 0.8)); border: 2px solid #800080;">
-            <h3><i class="fas fa-user-ninja"></i> NINJA SERIES ({{ ninja_count }})</h3>
+        <!-- Ninja Series -->
+        <section class="emote-section">
+            <h2 class="section-title"><i class="fas fa-user-ninja"></i> NINJA SERIES</h2>
             <div class="emotes-grid">
                 {% for emote in ninja_emotes %}
-                <div class="emote-card">
-                    <div class="emote-name">
-                        <i class="fas {{ emote.icon }}"></i> {{ emote.name }}
+                <div class="emote-card" onclick="selectEmote('{{ emote.id }}', '{{ emote.name }}')">
+                    <div class="emote-header">
+                        <div class="emote-icon">
+                            <i class="fas {{ emote.icon }}"></i>
+                        </div>
+                        <div class="emote-name">{{ emote.name }}</div>
                     </div>
                     <div class="emote-id">ID: {{ emote.id }}</div>
-                    <button type="button" class="send-btn" onclick="sendEmote('{{ emote.id }}', '{{ emote.name }}')">
-                        <i class="fas fa-paper-plane"></i> SEND EMOTE
-                    </button>
+                    <div class="emote-rarity rarity-{{ emote.rarity }}">{{ emote.rarity|upper }}</div>
+                    <div class="emote-actions">
+                        <button class="emote-btn emote-btn-send" onclick="event.stopPropagation(); sendEmoteDirect('{{ emote.id }}', '{{ emote.name }}')">
+                            <i class="fas fa-paper-plane"></i> SEND
+                        </button>
+                    </div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
+        </section>
     </div>
-    
+
+    <!-- Compact Status Bar -->
     <div class="status-bar">
         <div class="status-item">
-            <div class="status-dot"></div>
-            <span>Status: <span id="status">ONLINE</span></span>
+            <div class="status-icon">
+                <i class="fas fa-server"></i>
+            </div>
+            <div class="status-info">
+                <div class="status-label">SERVER</div>
+                <div class="status-value" id="currentServer">IND</div>
+            </div>
         </div>
+        
         <div class="status-item">
-            <i class="fas fa-bolt"></i>
-            <span>Commands: <span id="count">0</span></span>
+            <div class="status-icon">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="status-info">
+                <div class="status-label">SENT</div>
+                <div class="status-value" id="commandCount">0</div>
+            </div>
         </div>
+        
         <div class="status-item">
-            <i class="fas fa-plug"></i>
-            <span>TCP: <span id="tcpConn">CONNECTED</span></span>
+            <div class="status-icon">
+                <i class="fas fa-users"></i>
+            </div>
+            <div class="status-info">
+                <div class="status-label">PLAYERS</div>
+                <div class="status-value" id="playerCount">0</div>
+            </div>
         </div>
+        
         <div class="status-item">
-            <i class="fas fa-fire"></i>
-            <span>Emotes: {{ total_emotes }}</span>
-        </div>
-        <div class="status-item">
-            <i class="fas fa-user"></i>
-            <span>Developer: ASHISH</span>
-        </div>
-        <div class="status-item">
-            <i class="fab fa-instagram"></i>
-            <span>@ashish.shakya0001</span>
+            <div class="status-icon">
+                <i class="fab fa-instagram"></i>
+            </div>
+            <div class="status-info">
+                <div class="status-label">CREATOR</div>
+                <div class="status-value">ASHISH</div>
+            </div>
         </div>
     </div>
-    
-    <div class="notification" id="notification"></div>
-    
+
     <script>
         let commandCount = 0;
-        let progressInterval;
-        let tcpConnected = true;
+        let currentServer = 'IND';
+        let selectedEmoteId = '909033001';
+        let selectedEmoteName = '🔥 EVO M4A1 MAX';
+        let maxUids = 6;
         
-        function updateTCPStatus(connected) {
-            tcpConnected = connected;
-            const statusElem = document.getElementById('tcpConnStatus');
-            const connElem = document.getElementById('tcpConn');
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            updateStatus();
+            initUidFields();
+        });
+        
+        function initUidFields() {
+            // Start with 1 UID field
+            addUidField();
+        }
+        
+        function selectServer(server) {
+            currentServer = server;
+            document.getElementById('currentServer').textContent = server;
             
-            if (connected) {
-                statusElem.className = 'tcp-connected';
-                statusElem.textContent = 'CONNECTED';
-                connElem.textContent = 'CONNECTED';
-                connElem.style.color = '#00ff00';
+            // Update button states
+            document.getElementById('serverIND').classList.remove('active');
+            document.getElementById('serverBD').classList.remove('active');
+            document.getElementById('server' + server).classList.add('active');
+            
+            showNotification(`Server switched to ${server}`, 'info');
+        }
+        
+        function addUidField() {
+            const container = document.getElementById('uidContainer');
+            const uidCount = container.children.length;
+            
+            if (uidCount >= maxUids) {
+                showNotification(`Maximum ${maxUids} UIDs allowed`, 'warning');
+                document.getElementById('addUidBtn').disabled = true;
+                return;
+            }
+            
+            const uidDiv = document.createElement('div');
+            uidDiv.className = 'uid-input';
+            const fieldNum = uidCount + 1;
+            uidDiv.innerHTML = `
+                <label>PLAYER ${fieldNum}</label>
+                <input type="text" class="uid-input-field" placeholder="Enter 8-11 digit UID" 
+                       pattern="[0-9]{8,11}" title="8-11 digit UID" maxlength="11">
+            `;
+            
+            container.appendChild(uidDiv);
+            
+            // Add event listeners
+            const input = uidDiv.querySelector('input');
+            input.addEventListener('input', validateUidInput);
+            input.addEventListener('blur', updatePlayerCount);
+            
+            // Focus on new input
+            input.focus();
+            
+            updatePlayerCount();
+        }
+        
+        function validateUidInput(e) {
+            const input = e.target;
+            const value = input.value.trim();
+            
+            input.classList.remove('valid', 'invalid');
+            
+            if (value === '') return;
+            
+            if (value.match(/^\d{8,11}$/)) {
+                input.classList.add('valid');
             } else {
-                statusElem.className = 'tcp-disconnected';
-                statusElem.textContent = 'DISCONNECTED';
-                connElem.textContent = 'DISCONNECTED';
-                connElem.style.color = '#ff0000';
+                input.classList.add('invalid');
+            }
+            
+            updatePlayerCount();
+        }
+        
+        function getValidUids() {
+            return Array.from(document.querySelectorAll('.uid-input-field'))
+                .map(input => input.value.trim())
+                .filter(uid => uid.match(/^\d{8,11}$/));
+        }
+        
+        function updatePlayerCount() {
+            const validUids = getValidUids();
+            document.getElementById('playerCount').textContent = validUids.length;
+            
+            // Enable/disable add button
+            const addBtn = document.getElementById('addUidBtn');
+            addBtn.disabled = document.querySelectorAll('.uid-input').length >= maxUids;
+        }
+        
+        function clearAllUids() {
+            if (confirm('Clear all UID fields?')) {
+                document.querySelectorAll('.uid-input-field').forEach(input => {
+                    input.value = '';
+                    input.classList.remove('valid', 'invalid');
+                });
+                updatePlayerCount();
+                showNotification('All UID fields cleared', 'success');
             }
         }
         
-        function showNotification(message, type = 'success') {
-            const notif = document.getElementById('notification');
-            notif.textContent = message;
-            notif.className = `notification ${type}`;
-            notif.style.display = 'block';
+        function showNotification(message, type = 'info') {
+            const container = document.getElementById('notificationContainer');
+            const notification = document.createElement('div');
+            notification.className = 'notification';
             
+            let icon = 'fas fa-info-circle';
+            let title = 'Info';
+            
+            switch(type) {
+                case 'success':
+                    icon = 'fas fa-check-circle';
+                    title = 'Success';
+                    break;
+                case 'error':
+                    icon = 'fas fa-times-circle';
+                    title = 'Error';
+                    break;
+                case 'warning':
+                    icon = 'fas fa-exclamation-triangle';
+                    title = 'Warning';
+                    break;
+            }
+            
+            notification.innerHTML = `
+                <div class="notification-icon">
+                    <i class="${icon}"></i>
+                </div>
+                <div class="notification-content">
+                    <div class="notification-title">${title}</div>
+                    <div class="notification-message">${message}</div>
+                </div>
+            `;
+            
+            container.appendChild(notification);
+            
+            // Auto remove
             setTimeout(() => {
-                notif.style.display = 'none';
-            }, 4000);
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
         }
         
-        function updateStatus() {
-            document.getElementById('count').textContent = commandCount;
+        function showLoading() {
+            document.getElementById('loadingOverlay').classList.add('active');
         }
         
-        function startProgress() {
-            const progressFill = document.createElement('div');
-            progressFill.className = 'progress-fill';
-            progressFill.id = 'progressFill';
-            document.querySelector('.progress-bar')?.remove();
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.remove('active');
+        }
+        
+        function validateInputs() {
+            const teamCode = document.getElementById('team_code').value.trim();
             
-            const progressBar = document.createElement('div');
-            progressBar.className = 'progress-bar';
-            progressBar.appendChild(progressFill);
-            
-            const evoSection = document.querySelector('.evo-section');
-            if (evoSection) {
-                evoSection.appendChild(progressBar);
+            if (!teamCode.match(/^\d{7}$/)) {
+                showNotification('Team Code must be 7 digits', 'error');
+                return false;
             }
             
-            let width = 0;
-            clearInterval(progressInterval);
-            progressInterval = setInterval(() => {
-                if (width >= 100) {
-                    clearInterval(progressInterval);
-                    progressFill.style.width = '0%';
-                } else {
-                    width += 10;
-                    progressFill.style.width = width + '%';
-                }
+            const validUids = getValidUids();
+            if (validUids.length === 0) {
+                showNotification('Add at least one valid UID', 'error');
+                return false;
+            }
+            
+            return true;
+        }
+        
+        function selectEmote(emoteId, emoteName) {
+            selectedEmoteId = emoteId;
+            selectedEmoteName = emoteName;
+            
+            // Visual feedback
+            const buttons = document.querySelectorAll('.emote-btn-send');
+            buttons.forEach(btn => btn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND');
+            
+            const clickedCard = event.target.closest('.emote-card');
+            if (clickedCard) {
+                const clickedBtn = clickedCard.querySelector('.emote-btn-send');
+                clickedBtn.innerHTML = '<i class="fas fa-check-circle"></i> SELECTED';
+            }
+            
+            showNotification(`Selected: ${emoteName}`, 'info');
+        }
+        
+        function sendEmoteDirect(emoteId, emoteName) {
+            // Select emote first
+            selectEmote(emoteId, emoteName);
+            
+            // Then send it
+            setTimeout(() => {
+                sendSelectedEmote();
             }, 100);
         }
         
-        function selectAllEvo() {
-            if (!tcpConnected) {
-                showNotification('❌ TCP not connected! Please check bot status.', 'error');
-                return;
-            }
+        function sendSelectedEmote() {
+            if (!validateInputs()) return;
             
-            const evoButtons = document.querySelectorAll('.evo-btn:not(.select-all-btn)');
-            evoButtons.forEach(btn => {
-                btn.style.background = 'linear-gradient(135deg, #ff0000, #ff00ff)';
-                btn.innerHTML = '<i class="fas fa-check"></i> ' + btn.textContent.replace('✓ ', '');
-            });
+            const teamCode = document.getElementById('team_code').value.trim();
+            const uids = getValidUids();
             
-            showNotification('🎯 All EVO guns selected! Ready to fire via TCP!', 'success');
-            startProgress();
-        }
-        
-        function sendEvoEmote(emoteId, emoteName) {
-            sendEmote(emoteId, emoteName);
-        }
-        
-        function sendEmote(emoteId, emoteName) {
-            const teamCode = document.getElementById('team_code')?.value;
-            const targetUid = document.getElementById('target_uid')?.value;
-            
-            if (!teamCode || !targetUid) {
-                showNotification('❌ Please enter Team Code and Target UID first!', 'error');
-                return;
-            }
-            
-            if (!teamCode.match(/^\d{7}$/)) {
-                showNotification('❌ Team Code must be 7 digits!', 'error');
-                return;
-            }
-            
-            if (!targetUid.match(/^\d{8,11}$/)) {
-                showNotification('❌ Target UID must be 8-11 digits!', 'error');
-                return;
-            }
-            
-            showNotification(`🚀 Sending ${emoteName} to UID ${targetUid}...`, 'warning');
+            showLoading();
+            showNotification(`Sending ${selectedEmoteName} to ${uids.length} players...`, 'info');
             
             fetch('/send', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/x-www-form-urlencoded',
                 },
-                body: `team_code=${teamCode}&emote_id=${emoteId}&target_uid=${targetUid}`
+                body: `team_code=${teamCode}&emote_id=${selectedEmoteId}&target_uid=${uids.join(',')}&region=${currentServer}`
             })
-            .then(r => r.json())
+            .then(response => response.json())
             .then(data => {
-                if(data.success) {
+                hideLoading();
+                
+                if (data.success) {
                     commandCount++;
                     updateStatus();
-                    showNotification(`✅ ${emoteName} sent to UID ${targetUid}!`, 'success');
+                    showNotification(`Successfully sent to ${uids.length} players!`, 'success');
+                    
+                    // Reset send button text
+                    const buttons = document.querySelectorAll('.emote-btn-send');
+                    buttons.forEach(btn => btn.innerHTML = '<i class="fas fa-paper-plane"></i> SEND');
                 } else {
-                    showNotification('❌ Error: ' + data.error, 'error');
+                    showNotification(data.error, 'error');
                 }
             })
-            .catch(() => {
-                showNotification('❌ Network error', 'error');
+            .catch(error => {
+                hideLoading();
+                showNotification('Network error occurred', 'error');
+                console.error('Error:', error);
             });
         }
         
-        function sendQuickCommand() {
-            const teamCode = document.getElementById('team_code')?.value;
-            const targetUid = document.getElementById('target_uid')?.value;
-            const emoteId = '909033001'; // Default M4A1
-            
-            if (!teamCode || !targetUid) {
-                showNotification('❌ Please enter Team Code and Target UID first!', 'error');
-                return;
-            }
-            
-            if (!teamCode.match(/^\d{7}$/)) {
-                showNotification('❌ Team Code must be 7 digits!', 'error');
-                return;
-            }
-            
-            if (!targetUid.match(/^\d{8,11}$/)) {
-                showNotification('❌ Target UID must be 8-11 digits!', 'error');
-                return;
-            }
-            
-            showNotification(`🚀 Sending emote attack to UID ${targetUid}...`, 'warning');
-            
-            fetch('/send', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: `team_code=${teamCode}&emote_id=${emoteId}&target_uid=${targetUid}`
-            })
-            .then(r => r.json())
-            .then(data => {
-                if(data.success) {
-                    commandCount++;
-                    updateStatus();
-                    showNotification(`✅ Emote attack sent to UID ${targetUid}!`, 'success');
-                } else {
-                    showNotification('❌ Error: ' + data.error, 'error');
-                }
-            })
-            .catch(() => {
-                showNotification('❌ Network error', 'error');
-            });
+        function updateStatus() {
+            document.getElementById('commandCount').textContent = commandCount;
         }
         
-        // Initialize
-        updateStatus();
-        updateTCPStatus(true);
-        
-        // Animate status dot
-        setInterval(() => {
-            const dot = document.querySelector('.status-dot');
-            if (dot) {
-                dot.style.animation = 'none';
-                setTimeout(() => {
-                    dot.style.animation = 'pulse 2s infinite';
-                }, 10);
+        // Keyboard shortcuts
+        document.addEventListener('keydown', function(e) {
+            if (e.ctrlKey && e.key === 'Enter') sendSelectedEmote();
+            if (e.ctrlKey && e.key === 'a' && e.shiftKey) {
+                e.preventDefault();
+                addUidField();
             }
-        }, 5000);
+        });
+        
+        // Auto-select first emote
+        setTimeout(() => {
+            selectEmote('909033001', '🔥 EVO M4A1 MAX');
+        }, 100);
     </script>
 </body>
 </html>
@@ -1165,44 +1683,70 @@ def send_command():
         team_code = request.form.get('team_code', '').strip()
         emote_id = request.form.get('emote_id', '').strip()
         target_uid = request.form.get('target_uid', '').strip()
+        region = request.form.get('region', 'IND').strip()
         
-        print(f"🚀 Command received: Team={team_code}, Emote={emote_id}, Target={target_uid}")
+        print(f"🚀 Command received: Server={region}, Team={team_code}, Emote={emote_id}")
         
         # Validation
         if not re.match(r'^\d{7}$', team_code):
             return jsonify({"success": False, "error": "Team Code must be 7 digits"})
         
-        if not re.match(r'^\d{8,11}$', target_uid):
-            return jsonify({"success": False, "error": "Target UID must be 8-11 digits"})
+        if not target_uid:
+            return jsonify({"success": False, "error": "No UIDs provided"})
+        
+        # Check UIDs
+        uid_list = [uid.strip() for uid in target_uid.split(',') if uid.strip()]
+        for uid in uid_list:
+            if not re.match(r'^\d{8,11}$', uid):
+                return jsonify({"success": False, "error": f"Invalid UID: {uid}"})
         
         if not re.match(r'^\d{9}$', emote_id):
             return jsonify({"success": False, "error": "Invalid emote ID"})
         
-        # Find emote name and category
+        # Validate server
+        if region not in ['IND', 'BD']:
+            region = 'IND'
+        
+        # Find emote name
         emote_name = "Custom Emote"
         category = "basic"
-        for cat_name, emotes in EMOTE_CATEGORIES.items():
-            for emote in emotes:
-                if emote["id"] == emote_id:
-                    emote_name = emote["name"]
-                    category = emote.get("rarity", "basic")
-                    break
+        for emote in ALL_EMOTES:
+            if emote["id"] == emote_id:
+                emote_name = emote["name"]
+                category = emote.get("rarity", "basic")
+                break
         
         user_ip = request.remote_addr
-        command_id = command_manager.save_command(team_code, emote_id, target_uid, user_ip, emote_name, category)
         
-        if command_id:
+        # Save command
+        command_id = command_manager.save_command(team_code, emote_id, target_uid, user_ip, emote_name, category, region)
+        
+        # Send to API
+        api_result = command_manager.send_to_api(team_code, emote_id, target_uid, region)
+        
+        if command_id and api_result.get("success"):
+            # Mark as executed
+            for cmd in command_storage["commands"]:
+                if cmd["id"] == command_id:
+                    cmd["executed"] = True
+                    cmd["status"] = "executed"
+                    cmd["api_response"] = api_result
+                    break
+            
             return jsonify({
                 "success": True,
-                "message": f"Command #{command_id} queued for execution!",
+                "message": f"Sent to {len(uid_list)} players",
                 "command_id": command_id,
-                "note": "Command saved to bot queue"
+                "api_response": api_result
             })
         else:
-            return jsonify({"success": False, "error": "Server error"})
+            return jsonify({
+                "success": False, 
+                "error": api_result.get("error", "Failed")
+            })
             
     except Exception as e:
-        print(f"❌ Route error: {e}")
+        print(f"❌ Error: {e}")
         return jsonify({"success": False, "error": "Internal error"})
 
 @app.route('/status')
@@ -1214,36 +1758,19 @@ def status():
         "pending_commands": len(pending),
         "total_commands": command_storage["stats"]["total"],
         "stats": command_storage["stats"],
-        "recent_commands": command_storage["commands"][-10:] if command_storage["commands"] else []
+        "recent_commands": command_storage["commands"][-5:] if command_storage["commands"] else []
     })
-
-@app.route('/get_commands')
-def get_commands():
-    return jsonify({"commands": command_storage["commands"]})
-
-@app.route('/mark_executed/<int:command_id>', methods=['POST'])
-def mark_executed(command_id):
-    for cmd in command_storage["commands"]:
-        if cmd["id"] == command_id:
-            cmd["executed"] = True
-            cmd["status"] = "executed"
-            print(f"✅ Command #{command_id} marked as executed")
-            return jsonify({"success": True})
-    return jsonify({"success": False})
 
 # ==================== MAIN ====================
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    print(f"🚀 ASHISH EMOTE PANEL v3.0 starting on port {port}")
-    print(f"🎮 Total Emotes: {len(ALL_EMOTES)}")
+    print(f"🌌 NEBULA EMOTE PANEL v8.0 starting on port {port}")
+    print(f"🔵 Dark Blue Theme • 🔴 Red Outlines • Premium Design")
+    print(f"🎮 Unique Emotes: {len(ALL_EMOTES)}")
     print(f"🔥 EVO Guns: {len(EMOTE_CATEGORIES['EVO_GUNS'])}")
-    print(f"⭐ Special & Popular: {len(EMOTE_CATEGORIES['SPECIAL_POPULAR'])}")
+    print(f"⭐ Special: {len(EMOTE_CATEGORIES['SPECIAL_POPULAR'])}")
     print(f"🔵 Basic: {len(EMOTE_CATEGORIES['BASIC_EMOTES'])}")
-    print(f"🏆 More Practice: {len(EMOTE_CATEGORIES['MORE_PRACTICE'])}")
-    print(f"🔥 Fireborn Series: {len(EMOTE_CATEGORIES['FIREBORN_SERIES'])}")
-    print(f"🥷 Ninja Series: {len(EMOTE_CATEGORIES['NINJA_SERIES'])}")
-    print(f"👋 Greeting: {len(EMOTE_CATEGORIES['GREETING'])}")
-    print(f"🎮 Party Game: {len(EMOTE_CATEGORIES['PARTY_GAME'])}")
-    print(f"⭐ Extra Special: {len(EMOTE_CATEGORIES['EXTRA_SPECIAL'])}")
+    print("=" * 50)
+    print(f"🌍 Servers: IND | BD • Max 6 UIDs")
     print("=" * 50)
     app.run(host='0.0.0.0', port=port, debug=False)
